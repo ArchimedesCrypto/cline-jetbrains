@@ -1,61 +1,45 @@
 #!/bin/bash
 
-# Script to sync changes from the main Cline repository
-# This script should be run from the root of the cline-jetbrains directory
+# Script to sync changes from the main Cline repository.
+# This script syncs the TypeScript code from the main repository to the JetBrains plugin.
 
-# Exit on error
 set -e
 
-# Print commands
-set -x
+# Get the directory of the script
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+PROJECT_DIR="$( cd "$SCRIPT_DIR/.." && pwd )"
+MAIN_REPO_DIR="$( cd "$PROJECT_DIR/../.." && pwd )"
 
-# Check if the main repository is already cloned
-if [ ! -d "cline-core" ]; then
-    echo "Cloning main Cline repository..."
-    git clone https://github.com/cline/cline.git cline-core
+# Print the current directory
+echo "Syncing Cline JetBrains plugin in $PROJECT_DIR"
+
+# Check if the main repository exists
+if [ ! -d "$MAIN_REPO_DIR/src" ]; then
+  echo "Error: Main repository not found at $MAIN_REPO_DIR"
+  exit 1
 fi
 
-# Navigate to the main repository
-cd cline-core
+# Create the core directory if it doesn't exist
+mkdir -p "$PROJECT_DIR/src/main/ts/core"
 
-# Fetch the latest changes
-git fetch origin
+# Sync the core TypeScript code
+echo "Syncing core TypeScript code..."
+cp -r "$MAIN_REPO_DIR/src/core" "$PROJECT_DIR/src/main/ts/"
+cp -r "$MAIN_REPO_DIR/src/shared" "$PROJECT_DIR/src/main/ts/"
+cp -r "$MAIN_REPO_DIR/src/utils" "$PROJECT_DIR/src/main/ts/"
+cp -r "$MAIN_REPO_DIR/src/api" "$PROJECT_DIR/src/main/ts/"
 
-# Reset to the latest main branch
-git reset --hard origin/main
+# Sync the TypeScript types
+echo "Syncing TypeScript types..."
+cp -r "$MAIN_REPO_DIR/src/exports" "$PROJECT_DIR/src/main/ts/"
 
-# Navigate back to the JetBrains plugin directory
-cd ..
-
-# Copy the necessary files from the main repository
-echo "Copying files from main repository..."
-
-# Create directories if they don't exist
-mkdir -p src/main/ts/core
-
-# Copy the core TypeScript files
-cp -r cline-core/src/core/* src/main/ts/core/
-cp -r cline-core/src/api/* src/main/ts/core/api/
-cp -r cline-core/src/shared/* src/main/ts/core/shared/
-cp -r cline-core/src/utils/* src/main/ts/core/utils/
-
-# Copy the necessary resources
-mkdir -p src/main/resources/icons
-cp -r cline-core/assets/icons/* src/main/resources/icons/
-
-# Update the bridge and adapter files if needed
-echo "Updating bridge and adapter files..."
-
-# TODO: Add logic to update bridge and adapter files if needed
-
-# Build the TypeScript code
-echo "Building TypeScript code..."
-cd src/main/ts
-npx tsc
-cd ../../..
-
-# Run tests
-echo "Running tests..."
-# TODO: Add tests
+# Update the imports in the TypeScript files
+echo "Updating imports in TypeScript files..."
+find "$PROJECT_DIR/src/main/ts" -name "*.ts" -type f -exec sed -i 's|from "../|from "../../|g' {} \;
+find "$PROJECT_DIR/src/main/ts" -name "*.ts" -type f -exec sed -i 's|from "../../core/|from "../core/|g' {} \;
+find "$PROJECT_DIR/src/main/ts" -name "*.ts" -type f -exec sed -i 's|from "../../shared/|from "../shared/|g' {} \;
+find "$PROJECT_DIR/src/main/ts" -name "*.ts" -type f -exec sed -i 's|from "../../utils/|from "../utils/|g' {} \;
+find "$PROJECT_DIR/src/main/ts" -name "*.ts" -type f -exec sed -i 's|from "../../api/|from "../api/|g' {} \;
+find "$PROJECT_DIR/src/main/ts" -name "*.ts" -type f -exec sed -i 's|from "../../exports/|from "../exports/|g' {} \;
 
 echo "Sync completed successfully!"

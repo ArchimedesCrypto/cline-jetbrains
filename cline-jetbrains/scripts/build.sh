@@ -1,44 +1,29 @@
 #!/bin/bash
 
-# Script to build the JetBrains plugin
-# This script should be run from the root of the cline-jetbrains directory
+# Script to build the Cline JetBrains plugin.
+# This script builds the TypeScript bridge code and the Gradle project.
 
-# Exit on error
 set -e
 
-# Print commands
-set -x
+# Get the directory of the script
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+PROJECT_DIR="$( cd "$SCRIPT_DIR/.." && pwd )"
 
-# Check if Gradle is installed
-if ! command -v gradle &> /dev/null; then
-    echo "Gradle is not installed. Please install Gradle and try again."
-    exit 1
-fi
+# Print the current directory
+echo "Building Cline JetBrains plugin in $PROJECT_DIR"
 
-# Build the TypeScript code
-echo "Building TypeScript code..."
-cd src/main/ts
-npx tsc
-cd ../../..
+# Install npm dependencies
+echo "Installing npm dependencies..."
+cd "$PROJECT_DIR"
+npm install
 
-# Make the script executable
-chmod +x scripts/sync.sh
+# Build the TypeScript bridge code
+echo "Building TypeScript bridge code..."
+npm run build
 
-# Build the plugin
-echo "Building plugin..."
-gradle clean build
+# Build the Gradle project
+echo "Building Gradle project..."
+cd "$PROJECT_DIR"
+./gradlew build
 
-# Check if the build was successful
-if [ $? -eq 0 ]; then
-    echo "Build completed successfully!"
-    echo "Plugin JAR file is located at: build/libs/cline-jetbrains-1.0.0.jar"
-else
-    echo "Build failed!"
-    exit 1
-fi
-
-# Run the plugin in the IDE (optional)
-if [ "$1" == "--run" ]; then
-    echo "Running plugin in the IDE..."
-    gradle runIde
-fi
+echo "Build completed successfully!"
