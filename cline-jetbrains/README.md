@@ -1,94 +1,127 @@
 # Cline for JetBrains IDEs
 
-This is the JetBrains version of [Cline](https://github.com/cline/cline), an AI assistant that can use your CLI and Editor to help with complex software development tasks.
+Cline is an AI-assisted coding agent that can use your CLI and Editor to help with complex software development tasks. This is the JetBrains plugin version of Cline, which works with IntelliJ IDEA, WebStorm, PyCharm, and other JetBrains IDEs.
 
 ## Features
 
-- AI-assisted coding with Claude 3.5 Sonnet's agentic capabilities
-- Create and edit files
-- Execute terminal commands
-- Use the browser for interactive debugging
-- Explore large projects
-- Extend capabilities with MCP
-
-## Requirements
-
-- JetBrains IDE (IntelliJ IDEA, WebStorm, PyCharm, etc.) version 2023.3 or later
-- Java 17 or later
-- Gradle 8.0 or later
-- Node.js 18 or later (for TypeScript development)
-
-## Building the Plugin
-
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/cline/cline-jetbrains.git
-   cd cline-jetbrains
-   ```
-
-2. Build the plugin:
-   ```bash
-   ./scripts/build.sh
-   ```
-
-3. The plugin JAR file will be located at `build/libs/cline-jetbrains-1.0.0.jar`.
-
-## Running the Plugin
-
-1. Run the plugin in the IDE:
-   ```bash
-   ./scripts/build.sh --run
-   ```
-
-2. Alternatively, you can install the plugin manually:
-   - Open your JetBrains IDE
-   - Go to Settings/Preferences > Plugins
-   - Click on the gear icon and select "Install Plugin from Disk..."
-   - Select the plugin JAR file
+- AI-assisted coding with support for multiple models (GPT-4, Claude, etc.)
+- File creation, editing, and navigation
+- Terminal command execution
+- Browser interaction
+- Task history and management
 
 ## Development
 
-### Project Structure
+### Prerequisites
 
-- `src/main/java/com/cline/jetbrains/`: Java/Kotlin code for JetBrains integration
-- `src/main/ts/`: TypeScript code for the bridge and adapters
-- `src/main/resources/`: Resources (icons, plugin.xml, etc.)
-- `scripts/`: Build and sync scripts
+- JDK 17 or later
+- Node.js 16 or later
+- Gradle 7.6 or later
+- JetBrains IDE (IntelliJ IDEA, WebStorm, PyCharm, etc.)
 
-### Syncing with the Main Repository
+### Setup
 
-To sync changes from the main Cline repository:
+1. Clone the repository:
+
+```bash
+git clone https://github.com/ArchimedesCrypto/cline.git
+cd cline
+git checkout jetbrains
+```
+
+2. Install dependencies:
+
+```bash
+cd cline-jetbrains
+npm install
+```
+
+3. Sync with the main Cline repository:
 
 ```bash
 ./scripts/sync.sh
 ```
 
-This script will:
-1. Clone the main repository if it doesn't exist
-2. Fetch the latest changes
-3. Copy the necessary files to the JetBrains plugin
-4. Update the bridge and adapter files if needed
-5. Build the TypeScript code
-
-### TypeScript Development
-
-The TypeScript code is located in the `src/main/ts/` directory. It consists of:
-
-- `bridge/`: Bridge interface between Java/Kotlin and TypeScript
-- `adapters/`: Adapters for the existing Cline TypeScript code
-- `core/`: Core functionality copied from the main repository
-
-To build the TypeScript code:
+4. Build the plugin:
 
 ```bash
-cd src/main/ts
-npx tsc
+./scripts/build.sh
 ```
+
+### Testing
+
+#### Running Tests
+
+To run the Java tests:
+
+```bash
+./gradlew test
+```
+
+To run the TypeScript tests:
+
+```bash
+npm test
+```
+
+To run all tests:
+
+```bash
+./scripts/test.sh
+```
+
+#### Manual Testing
+
+1. Build the plugin:
+
+```bash
+./scripts/build.sh
+```
+
+2. Install the plugin in a JetBrains IDE:
+
+   - Open the JetBrains IDE
+   - Go to Settings/Preferences > Plugins
+   - Click on the gear icon and select "Install Plugin from Disk..."
+   - Navigate to `cline-jetbrains/build/distributions/cline-jetbrains-1.0.0.zip`
+   - Click "OK" and restart the IDE
+
+3. Test the plugin:
+
+   - Open a project in the IDE
+   - Open the Cline tool window by clicking on the Cline icon in the tool window bar
+   - Create a new task by entering a prompt in the "New Task" tab
+   - Test the various features of the plugin:
+     - File creation and editing
+     - Terminal command execution
+     - Task history and management
+
+### Debugging
+
+To debug the plugin:
+
+1. Run the IDE with the plugin in debug mode:
+
+```bash
+./gradlew runIde --debug-jvm
+```
+
+2. Connect to the debug port (default: 5005) from your IDE.
+
+## Architecture
+
+The Cline JetBrains plugin is built using the following architecture:
+
+1. **Java/Kotlin Layer**: This layer handles the JetBrains IDE integration, including UI components, services, and actions.
+
+2. **TypeScript Bridge**: This layer provides a bridge between the Java/Kotlin layer and the TypeScript layer, allowing communication between the two.
+
+3. **TypeScript Layer**: This layer contains the core Cline functionality, including the AI model integration, task execution, and file operations.
 
 ## Contributing
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+Contributions are welcome! Please see the [CONTRIBUTING.md](../CONTRIBUTING.md) file for more information.
 
 ## License
 
-[Apache 2.0 © 2025 Cline Bot Inc.](../LICENSE)
+This project is licensed under the MIT License - see the [LICENSE](../LICENSE) file for details.
