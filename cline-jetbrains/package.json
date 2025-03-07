@@ -1,0 +1,42 @@
+{
+  "name": "cline-jetbrains",
+  "version": "1.0.0",
+  "description": "JetBrains version of Cline",
+  "main": "index.js",
+  "scripts": {
+    "build": "tsc -p src/main/ts/tsconfig.json",
+    "test": "jest"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/cline/cline-jetbrains.git"
+  },
+  "keywords": [
+    "cline",
+    "jetbrains",
+    "ai",
+    "coding",
+    "assistant"
+  ],
+  "author": "Cline Bot Inc.",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/cline/cline-jetbrains/issues"
+  },
+  "homepage": "https://github.com/cline/cline-jetbrains#readme",
+  "devDependencies": {
+    "@jest/globals": "^29.7.0",
+    "@types/jest": "^29.5.0",
+    "@types/node": "^18.15.0",
+    "jest": "^29.7.0",
+    "ts-jest": "^29.1.0",
+    "typescript": "^5.0.0"
+  },
+  "jest": {
+    "preset": "ts-jest",
+    "testEnvironment": "node",
+    "testMatch": [
+      "**/src/test/ts/**/*.ts"
+    ]
+  }
+}

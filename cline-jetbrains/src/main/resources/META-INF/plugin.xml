@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<idea-plugin>
+    <id>com.cline.jetbrains</id>
+    <name>Cline</name>
+    <vendor>Cline Bot Inc.</vendor>
+
+    <!-- Product and plugin compatibility requirements -->
+    <depends>com.intellij.modules.platform</depends>
+    <!-- Dependency on JavaScript plugin for TypeScript support -->
+    <depends>JavaScript</depends>
+
+    <!-- Extension points defined by the plugin -->
+    <extensions defaultExtensionNs="com.intellij">
+        <!-- Tool Window -->
+        <toolWindow id="Cline"
+                    anchor="right"
+                    factoryClass="com.cline.jetbrains.ui.ClineToolWindowFactory"
+                    icon="/icons/cline_icon.svg"/>
+
+        <!-- Services -->
+        <applicationService serviceImplementation="com.cline.jetbrains.services.ClineSettingsService"/>
+        <projectService serviceImplementation="com.cline.jetbrains.services.ClineProjectService"/>
+
+        <!-- Settings -->
+        <applicationConfigurable
+                parentId="tools"
+                instance="com.cline.jetbrains.ui.settings.ClineSettingsConfigurable"
+                id="com.cline.jetbrains.ui.settings.ClineSettingsConfigurable"
+                displayName="Cline"/>
+    </extensions>
+
+    <!-- Actions defined by the plugin -->
+    <actions>
+        <group id="Cline.ActionGroup" text="Cline" description="Cline actions">
+            <add-to-group group-id="ToolsMenu" anchor="last"/>
+            <action id="Cline.NewTask" 
+                    class="com.cline.jetbrains.actions.NewTaskAction" 
+                    text="New Task" 
+                    description="Start a new Cline task"/>
+        </group>
+    </actions>
+
+    <!-- Application listeners -->
+    <applicationListeners>
+        <listener class="com.cline.jetbrains.ClineApplicationListener"
+                  topic="com.intellij.ide.AppLifecycleListener"/>
+    </applicationListeners>
+
+    <!-- JavaScript integration -->
+    <extensions defaultExtensionNs="JavaScript">
+        <!-- JavaScript module for TypeScript bridge -->
+        <frameworkSpecificRegistrar implementation="com.cline.jetbrains.ClineJavaScriptFrameworkProvider"/>
+    </extensions>
+</idea-plugin>

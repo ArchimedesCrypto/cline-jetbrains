@@ -1,0 +1,78 @@
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+
+plugins {
+    id("java")
+    id("org.jetbrains.kotlin.jvm") version "1.9.0"
+    id("org.jetbrains.intellij") version "1.16.0"
+}
+
+group = "com.cline"
+version = "1.0.0"
+
+repositories {
+    mavenCentral()
+}
+
+// Configure Gradle IntelliJ Plugin
+// Read more: https://plugins.jetbrains.com/docs/intellij/tools-gradle-intellij-plugin.html
+intellij {
+    version.set("2023.3")
+    type.set("IC") // Target IDE Platform - IntelliJ IDEA Community Edition
+
+    plugins.set(listOf(
+        "JavaScript" // Dependency on JavaScript plugin for TypeScript support
+    ))
+}
+
+dependencies {
+    implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
+    testImplementation("junit:junit:4.13.2")
+}
+
+tasks {
+    // Set the JVM compatibility versions
+    withType<JavaCompile> {
+        sourceCompatibility = "17"
+        targetCompatibility = "17"
+    }
+    withType<KotlinCompile> {
+        kotlinOptions.jvmTarget = "17"
+    }
+
+    patchPluginXml {
+        sinceBuild.set("233")
+        untilBuild.set("243.*")
+        
+        // Plugin description visible in the Marketplace
+        pluginDescription.set("""
+            Cline for JetBrains IDEs - AI-assisted coding agent.
+            
+            Cline is an AI assistant that can use your CLI and Editor to help with complex software development tasks.
+            It can create and edit files, explore large projects, use the browser, and execute terminal commands
+            (after you grant permission).
+        """.trimIndent())
+        
+        // Plugin change notes visible in the Marketplace
+        changeNotes.set("""
+            Initial release of Cline for JetBrains IDEs.
+        """.trimIndent())
+    }
+
+    // Configure UI tests
+    runIdeForUiTests {
+        systemProperty("robot-server.port", "8082")
+        systemProperty("ide.mac.message.dialogs.as.sheets", "false")
+        systemProperty("jb.privacy.policy.text", "<!--999.999-->")
+        systemProperty("jb.consents.confirmation.enabled", "false")
+    }
+
+    signPlugin {
+        certificateChain.set(System.getenv("CERTIFICATE_CHAIN"))
+        privateKey.set(System.getenv("PRIVATE_KEY"))
+        password.set(System.getenv("PRIVATE_KEY_PASSWORD"))
+    }
+
+    publishPlugin {
+        token.set(System.getenv("PUBLISH_TOKEN"))
+    }
+}
