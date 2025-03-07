@@ -1,4 +1,5 @@
 import { ClineBridge, ClineSettings, TaskOptions, TaskResult, TaskStatus, CommandResult, FileResult, FileListResult, FileSearchResult } from './ClineBridge';
+import { ClineCore } from '../core/ClineCore';
 
 /**
  * Implementation of the Cline bridge.
@@ -8,6 +9,7 @@ export class ClineBridgeImpl implements ClineBridge {
     private projectPath: string = '';
     private settings: ClineSettings | null = null;
     private taskStatus: TaskStatus = { status: 'idle', message: 'No task running' };
+    private clineCore: ClineCore | null = null;
     
     /**
      * Initialize the bridge.
@@ -19,9 +21,16 @@ export class ClineBridgeImpl implements ClineBridge {
         this.projectPath = projectPath;
         this.settings = settings;
         
-        // TODO: Initialize the TypeScript bridge
-        
-        console.log('Cline bridge initialized');
+        try {
+            // Initialize the Cline core
+            this.clineCore = new ClineCore(projectPath, settings);
+            await this.clineCore.initialize();
+            
+            console.log('Cline bridge initialized successfully');
+        } catch (error) {
+            console.error('Failed to initialize Cline bridge', error);
+            throw error;
+        }
     }
     
     /**
@@ -32,20 +41,24 @@ export class ClineBridgeImpl implements ClineBridge {
     async executeTask(task: string, options?: TaskOptions): Promise<TaskResult> {
         console.log(`Executing task: ${task}`);
         
+        if (!this.clineCore) {
+            return {
+                success: false,
+                message: 'Cline core not initialized'
+            };
+        }
+        
         // Update task status
         this.taskStatus = { status: 'running', message: 'Task is running', progress: 0 };
         
         try {
-            // TODO: Implement task execution using the existing TypeScript codebase
+            // Execute the task using the Cline core
+            const result = await this.clineCore.executeTask(task, options);
             
-            // For now, just return a placeholder result
+            // Update task status
             this.taskStatus = { status: 'completed', message: 'Task completed', progress: 100 };
             
-            return {
-                success: true,
-                message: 'Task executed successfully',
-                data: { task, options }
-            };
+            return result;
         } catch (error) {
             // Update task status
             this.taskStatus = { status: 'failed', message: `Task failed: ${error}` };
@@ -63,17 +76,37 @@ export class ClineBridgeImpl implements ClineBridge {
     async cancelTask(): Promise<void> {
         console.log('Cancelling task');
         
-        // TODO: Implement task cancellation
+        if (!this.clineCore) {
+            throw new Error('Cline core not initialized');
+        }
         
-        // Update task status
-        this.taskStatus = { status: 'idle', message: 'Task cancelled' };
+        try {
+            // Cancel the task using the Cline core
+            await this.clineCore.cancelTask();
+            
+            // Update task status
+            this.taskStatus = { status: 'idle', message: 'Task cancelled' };
+        } catch (error) {
+            console.error('Failed to cancel task', error);
+            throw error;
+        }
     }
     
     /**
      * Get the status of the current task.
      */
     async getTaskStatus(): Promise<TaskStatus> {
-        return this.taskStatus;
+        if (!this.clineCore) {
+            return this.taskStatus;
+        }
+        
+        try {
+            // Get the task status from the Cline core
+            return await this.clineCore.getTaskStatus();
+        } catch (error) {
+            console.error('Failed to get task status', error);
+            return this.taskStatus;
+        }
     }
     
     /**
@@ -83,12 +116,30 @@ export class ClineBridgeImpl implements ClineBridge {
     async executeCommand(command: string): Promise<CommandResult> {
         console.log(`Executing command: ${command}`);
         
-        // TODO: Implement command execution
+        if (!this.clineCore) {
+            return {
+                success: false,
+                output: 'Cline core not initialized'
+            };
+        }
         
-        return {
-            success: true,
-            output: `Command execution placeholder: ${command}`
-        };
+        try {
+            // Execute the command using the Cline core
+            const output = await this.clineCore.executeCommand(command);
+            
+            return {
+                success: true,
+                output
+            };
+        } catch (error) {
+            console.error('Failed to execute command', error);
+            
+            return {
+                success: false,
+                output: '',
+                error: `Command execution failed: ${error}`
+            };
+        }
     }
     
     /**
@@ -99,12 +150,29 @@ export class ClineBridgeImpl implements ClineBridge {
     async editFile(filePath: string, content: string): Promise<FileResult> {
         console.log(`Editing file: ${filePath}`);
         
-        // TODO: Implement file editing
+        if (!this.clineCore) {
+            return {
+                success: false,
+                error: 'Cline core not initialized'
+            };
+        }
         
-        return {
-            success: true,
-            content: `File editing placeholder: ${filePath}`
-        };
+        try {
+            // Edit the file using the Cline core
+            const result = await this.clineCore.editFile(filePath, content);
+            
+            return {
+                success: true,
+                content: result
+            };
+        } catch (error) {
+            console.error('Failed to edit file', error);
+            
+            return {
+                success: false,
+                error: `File editing failed: ${error}`
+            };
+        }
     }
     
     /**
@@ -115,12 +183,29 @@ export class ClineBridgeImpl implements ClineBridge {
     async createFile(filePath: string, content: string): Promise<FileResult> {
         console.log(`Creating file: ${filePath}`);
         
-        // TODO: Implement file creation
+        if (!this.clineCore) {
+            return {
+                success: false,
+                error: 'Cline core not initialized'
+            };
+        }
         
-        return {
-            success: true,
-            content: `File creation placeholder: ${filePath}`
-        };
+        try {
+            // Create the file using the Cline core
+            const result = await this.clineCore.createFile(filePath, content);
+            
+            return {
+                success: true,
+                content: result
+            };
+        } catch (error) {
+            console.error('Failed to create file', error);
+            
+            return {
+                success: false,
+                error: `File creation failed: ${error}`
+            };
+        }
     }
     
     /**
@@ -130,12 +215,29 @@ export class ClineBridgeImpl implements ClineBridge {
     async deleteFile(filePath: string): Promise<FileResult> {
         console.log(`Deleting file: ${filePath}`);
         
-        // TODO: Implement file deletion
+        if (!this.clineCore) {
+            return {
+                success: false,
+                error: 'Cline core not initialized'
+            };
+        }
         
-        return {
-            success: true,
-            content: `File deletion placeholder: ${filePath}`
-        };
+        try {
+            // Delete the file using the Cline core
+            const result = await this.clineCore.deleteFile(filePath);
+            
+            return {
+                success: true,
+                content: result
+            };
+        } catch (error) {
+            console.error('Failed to delete file', error);
+            
+            return {
+                success: false,
+                error: `File deletion failed: ${error}`
+            };
+        }
     }
     
     /**
@@ -145,12 +247,29 @@ export class ClineBridgeImpl implements ClineBridge {
     async readFile(filePath: string): Promise<FileResult> {
         console.log(`Reading file: ${filePath}`);
         
-        // TODO: Implement file reading
+        if (!this.clineCore) {
+            return {
+                success: false,
+                error: 'Cline core not initialized'
+            };
+        }
         
-        return {
-            success: true,
-            content: `File content placeholder: ${filePath}`
-        };
+        try {
+            // Read the file using the Cline core
+            const content = await this.clineCore.readFile(filePath);
+            
+            return {
+                success: true,
+                content
+            };
+        } catch (error) {
+            console.error('Failed to read file', error);
+            
+            return {
+                success: false,
+                error: `File reading failed: ${error}`
+            };
+        }
     }
     
     /**
@@ -161,12 +280,31 @@ export class ClineBridgeImpl implements ClineBridge {
     async listFiles(directoryPath: string, recursive?: boolean): Promise<FileListResult> {
         console.log(`Listing files in directory: ${directoryPath}, recursive: ${recursive}`);
         
-        // TODO: Implement file listing
+        if (!this.clineCore) {
+            return {
+                success: false,
+                files: [],
+                error: 'Cline core not initialized'
+            };
+        }
         
-        return {
-            success: true,
-            files: [`File listing placeholder: ${directoryPath}`]
-        };
+        try {
+            // List the files using the Cline core
+            const files = await this.clineCore.listFiles(directoryPath, recursive);
+            
+            return {
+                success: true,
+                files
+            };
+        } catch (error) {
+            console.error('Failed to list files', error);
+            
+            return {
+                success: false,
+                files: [],
+                error: `File listing failed: ${error}`
+            };
+        }
     }
     
     /**
@@ -177,18 +315,38 @@ export class ClineBridgeImpl implements ClineBridge {
     async searchFiles(pattern: string, directoryPath: string): Promise<FileSearchResult> {
         console.log(`Searching for files with pattern: ${pattern} in directory: ${directoryPath}`);
         
-        // TODO: Implement file searching
+        if (!this.clineCore) {
+            return {
+                success: false,
+                matches: [],
+                error: 'Cline core not initialized'
+            };
+        }
         
-        return {
-            success: true,
-            matches: [
-                {
-                    file: `File search placeholder: ${directoryPath}`,
-                    line: 1,
-                    content: `Match for pattern: ${pattern}`
-                }
-            ]
-        };
+        try {
+            // Search for the files using the Cline core
+            const files = await this.clineCore.searchFiles(pattern, directoryPath);
+            
+            // Convert the files to matches
+            const matches = files.map(file => ({
+                file,
+                line: 1,
+                content: `Match for pattern: ${pattern}`
+            }));
+            
+            return {
+                success: true,
+                matches
+            };
+        } catch (error) {
+            console.error('Failed to search files', error);
+            
+            return {
+                success: false,
+                matches: [],
+                error: `File searching failed: ${error}`
+            };
+        }
     }
 }
 
