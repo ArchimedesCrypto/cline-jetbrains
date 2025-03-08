@@ -62,27 +62,26 @@ public class JavaScriptBridge {
                 .setOffScreenRendering(true)
                 .build();
             
-            // Create the JS queries - using the static create method as it's still the recommended approach
-            // in IntelliJ 2023.3 despite being marked as deprecated
+            // In IntelliJ 2024.1, we need to use the static create method
             executeTaskQuery = JBCefJSQuery.create(browser);
-            cancelTaskQuery = JBCefJSQuery.create(browser);
-            getTaskStatusQuery = JBCefJSQuery.create(browser);
-            
-            // Register the JS queries
             executeTaskQuery.addHandler(result -> {
                 LOG.info("Execute task result: " + result);
                 return null;
             });
             
+            cancelTaskQuery = JBCefJSQuery.create(browser);
             cancelTaskQuery.addHandler(result -> {
                 LOG.info("Cancel task result: " + result);
                 return null;
             });
             
+            getTaskStatusQuery = JBCefJSQuery.create(browser);
             getTaskStatusQuery.addHandler(result -> {
                 LOG.info("Get task status result: " + result);
                 return null;
             });
+            
+            // Handlers are already registered in the create method
             
             // Create the bridge HTML file
             String bridgeHtml = createBridgeHtml();
@@ -97,10 +96,15 @@ public class JavaScriptBridge {
                     LOG.info("Bridge HTML loaded");
                     
                     // Initialize the bridge
-                    // Use the getQueryName method which is still available in IntelliJ 2023.3
-                    String executeTaskQueryName = executeTaskQuery.getQueryName();
-                    String cancelTaskQueryName = cancelTaskQuery.getQueryName();
-                    String getTaskStatusQueryName = getTaskStatusQuery.getQueryName();
+                    // In IntelliJ 2024.1, we need to use fixed names for the queries
+                    String executeTaskQueryName = "executeTaskQuery";
+                    String cancelTaskQueryName = "cancelTaskQuery";
+                    String getTaskStatusQueryName = "getTaskStatusQuery";
+                    
+                    // Register the queries with the browser
+                    executeTaskQuery.inject(executeTaskQueryName);
+                    cancelTaskQuery.inject(cancelTaskQueryName);
+                    getTaskStatusQuery.inject(getTaskStatusQueryName);
                     
                     String initScript = "window.initializeBridge(" +
                             "'" + executeTaskQueryName + "', " +
