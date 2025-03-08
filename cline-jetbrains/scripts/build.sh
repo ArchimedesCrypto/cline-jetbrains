@@ -24,6 +24,7 @@ npm run build
 # Build the Gradle project
 echo "Building Gradle project..."
 cd "$PROJECT_DIR"
-./gradlew build
+# Use system Gradle instead of wrapper since we're having issues with the wrapper
+gradle build
 
 echo "Build completed successfully!"

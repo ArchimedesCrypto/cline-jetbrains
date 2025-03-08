@@ -4,7 +4,7 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 plugins {
     id("java")
     id("org.jetbrains.kotlin.jvm") version "1.9.0"
-    id("org.jetbrains.intellij") version "1.16.0"
+    id("org.jetbrains.intellij") version "1.17.4"
 }
 
 group = "com.cline"
@@ -18,15 +18,21 @@ repositories {
 // Read more: https://plugins.jetbrains.com/docs/intellij/tools-gradle-intellij-plugin.html
 intellij {
     version.set("2023.3")
-    type.set("IC") // Target IDE Platform - IntelliJ IDEA Community Edition
+    type.set("IU") // Target IDE Platform - IntelliJ IDEA Ultimate Edition
 
     plugins.set(listOf(
-        "JavaScript" // Dependency on JavaScript plugin for TypeScript support
+        "JavaScript", // Dependency on JavaScript plugin for TypeScript support
+        "com.intellij.java", // Java plugin for Java support
+        "org.jetbrains.plugins.terminal" // Terminal plugin which includes JCEF dependencies
     ))
 }
 
 dependencies {
-    implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
+    // Remove explicit kotlin-stdlib-jdk8 dependency as it's automatically added by the Kotlin plugin
+    // and may conflict with the version provided by the IntelliJ Platform
+    
+    // JCEF is bundled with the IntelliJ platform, so we don't need to include it explicitly
+    // Instead, we'll add it as a plugin dependency
     testImplementation("junit:junit:4.13.2")
     testImplementation("org.mockito:mockito-core:5.3.1")
 }

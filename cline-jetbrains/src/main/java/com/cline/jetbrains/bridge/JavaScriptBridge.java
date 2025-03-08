@@ -62,7 +62,8 @@ public class JavaScriptBridge {
                 .setOffScreenRendering(true)
                 .build();
             
-            // Create the JS queries
+            // Create the JS queries - using the static create method as it's still the recommended approach
+            // in IntelliJ 2023.3 despite being marked as deprecated
             executeTaskQuery = JBCefJSQuery.create(browser);
             cancelTaskQuery = JBCefJSQuery.create(browser);
             getTaskStatusQuery = JBCefJSQuery.create(browser);
@@ -96,10 +97,15 @@ public class JavaScriptBridge {
                     LOG.info("Bridge HTML loaded");
                     
                     // Initialize the bridge
+                    // Use the getQueryName method which is still available in IntelliJ 2023.3
+                    String executeTaskQueryName = executeTaskQuery.getQueryName();
+                    String cancelTaskQueryName = cancelTaskQuery.getQueryName();
+                    String getTaskStatusQueryName = getTaskStatusQuery.getQueryName();
+                    
                     String initScript = "window.initializeBridge(" +
-                            "'" + executeTaskQuery.getQueryName() + "', " +
-                            "'" + cancelTaskQuery.getQueryName() + "', " +
-                            "'" + getTaskStatusQuery.getQueryName() + "'" +
+                            "'" + executeTaskQueryName + "', " +
+                            "'" + cancelTaskQueryName + "', " +
+                            "'" + getTaskStatusQueryName + "'" +
                             ");";
                     
                     browser.getCefBrowser().executeJavaScript(initScript, browser.getCefBrowser().getURL(), 0);
