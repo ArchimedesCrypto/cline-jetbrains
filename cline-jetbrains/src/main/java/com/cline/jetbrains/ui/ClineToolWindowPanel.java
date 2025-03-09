@@ -1,17 +1,24 @@
 package com.cline.jetbrains.ui;
 
+import com.cline.jetbrains.bridge.ClineBridgeManager;
 import com.cline.jetbrains.services.ClineProjectService;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.wm.ToolWindow;
-import com.intellij.ui.components.JBLabel;
+import com.intellij.ui.jcef.JBCefBrowser;
+import com.intellij.ui.jcef.JBCefJSQuery;
 import com.intellij.ui.components.JBPanel;
-import com.intellij.ui.components.JBScrollPane;
-import com.intellij.ui.components.JBTextArea;
-import com.intellij.util.ui.JBUI;
+import org.cef.browser.CefBrowser;
+import org.cef.browser.CefFrame;
+import org.cef.handler.CefLoadHandlerAdapter;
+import org.jetbrains.annotations.NotNull;
 
-import javax.swing.*;
 import java.awt.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Main panel for the Cline tool window.
@@ -23,11 +30,11 @@ public class ClineToolWindowPanel extends JBPanel<ClineToolWindowPanel> {
     private final Project project;
     private final ToolWindow toolWindow;
     private final ClineProjectService projectService;
+    private final ClineBridgeManager bridgeManager;
     
-    private JBTextArea inputArea;
-    private JBTextArea outputArea;
-    private JButton submitButton;
-
+    private JBCefBrowser browser;
+    private final List<JBCefJSQuery> jsQueries = new ArrayList<>();
+    
     /**
      * Constructor.
      * @param project The current project
@@ -38,123 +45,201 @@ public class ClineToolWindowPanel extends JBPanel<ClineToolWindowPanel> {
         this.project = project;
         this.toolWindow = toolWindow;
         this.projectService = project.getService(ClineProjectService.class);
+        this.bridgeManager = ClineBridgeManager.getInstance(project);
         
         // Initialize UI components
         initializeUI();
     }
-
+    
     /**
      * Initialize the UI components.
      */
     private void initializeUI() {
         LOG.info("Initializing Cline tool window UI");
         
-        // Create the header panel
-        JBPanel<?> headerPanel = createHeaderPanel();
-        add(headerPanel, BorderLayout.NORTH);
+        // Create the JCEF browser
+        browser = JBCefBrowser.createBuilder()
+            .setOffScreenRendering(false)
+            .build();
         
-        // Create the content panel
-        JBPanel<?> contentPanel = createContentPanel();
-        add(contentPanel, BorderLayout.CENTER);
+        // Create JS queries for UI operations
+        createJSQueries();
         
-        // Create the footer panel
-        JBPanel<?> footerPanel = createFooterPanel();
-        add(footerPanel, BorderLayout.SOUTH);
+        // Load the TypeScript UI
+        loadTypeScriptUI();
+        
+        // Add the browser to the panel
+        add(browser.getComponent(), BorderLayout.CENTER);
     }
-
+    
     /**
-     * Create the header panel.
-     * @return The header panel
+     * Create JS queries for UI operations.
      */
-    private JBPanel<?> createHeaderPanel() {
-        JBPanel<?> panel = new JBPanel<>(new BorderLayout());
-        panel.setBorder(JBUI.Borders.empty(10));
+    private void createJSQueries() {
+        // Create queries for task operations
+        JBCefJSQuery executeTaskQuery = JBCefJSQuery.create(browser);
+        executeTaskQuery.addHandler(result -> {
+            LOG.info("Execute task request: " + result);
+            bridgeManager.executeTask(result, "{}");
+            return null;
+        });
+        jsQueries.add(executeTaskQuery);
         
-        JBLabel titleLabel = new JBLabel("Cline - AI Coding Assistant");
-        titleLabel.setFont(JBUI.Fonts.label().biggerOn(4));
-        panel.add(titleLabel, BorderLayout.CENTER);
+        JBCefJSQuery cancelTaskQuery = JBCefJSQuery.create(browser);
+        cancelTaskQuery.addHandler(result -> {
+            LOG.info("Cancel task request: " + result);
+            bridgeManager.cancelTask();
+            return null;
+        });
+        jsQueries.add(cancelTaskQuery);
         
-        return panel;
+        JBCefJSQuery getTaskStatusQuery = JBCefJSQuery.create(browser);
+        getTaskStatusQuery.addHandler(result -> {
+            LOG.info("Get task status request: " + result);
+            bridgeManager.getTaskStatus();
+            return null;
+        });
+        jsQueries.add(getTaskStatusQuery);
+        
+        // Create query for UI events
+        JBCefJSQuery uiEventQuery = JBCefJSQuery.create(browser);
+        uiEventQuery.addHandler(result -> {
+            LOG.info("UI event: " + result);
+            // Handle UI events
+            return null;
+        });
+        jsQueries.add(uiEventQuery);
     }
-
+    
     /**
-     * Create the content panel.
-     * @return The content panel
+     * Load the TypeScript UI.
      */
-    private JBPanel<?> createContentPanel() {
-        JBPanel<?> panel = new JBPanel<>(new BorderLayout());
-        panel.setBorder(JBUI.Borders.empty(10));
-        
-        // Create the output area
-        outputArea = new JBTextArea();
-        outputArea.setEditable(false);
-        outputArea.setLineWrap(true);
-        outputArea.setWrapStyleWord(true);
-        outputArea.setText("Welcome to Cline for JetBrains IDEs!\n\nEnter your task below and click 'Submit' to get started.");
-        
-        JBScrollPane outputScrollPane = new JBScrollPane(outputArea);
-        outputScrollPane.setPreferredSize(JBUI.size(400, 300));
-        panel.add(outputScrollPane, BorderLayout.CENTER);
-        
-        return panel;
-    }
-
-    /**
-     * Create the footer panel.
-     * @return The footer panel
-     */
-    private JBPanel<?> createFooterPanel() {
-        JBPanel<?> panel = new JBPanel<>(new BorderLayout());
-        panel.setBorder(JBUI.Borders.empty(10));
-        
-        // Create the input area
-        inputArea = new JBTextArea();
-        inputArea.setLineWrap(true);
-        inputArea.setWrapStyleWord(true);
-        inputArea.setRows(5);
-        
-        JBScrollPane inputScrollPane = new JBScrollPane(inputArea);
-        panel.add(inputScrollPane, BorderLayout.CENTER);
-        
-        // Create the submit button
-        submitButton = new JButton("Submit");
-        submitButton.addActionListener(e -> onSubmit());
-        
-        JBPanel<?> buttonPanel = new JBPanel<>(new FlowLayout(FlowLayout.RIGHT));
-        buttonPanel.add(submitButton);
-        panel.add(buttonPanel, BorderLayout.SOUTH);
-        
-        return panel;
-    }
-
-    /**
-     * Handle the submit button click.
-     */
-    private void onSubmit() {
-        String input = inputArea.getText().trim();
-        if (input.isEmpty()) {
+    private void loadTypeScriptUI() {
+        // Get the project directory
+        Path projectDir = Paths.get(project.getBasePath());
+        if (projectDir == null) {
+            LOG.warn("Project directory not found");
+            loadDefaultUI();
             return;
         }
         
-        LOG.info("Submitting task: " + input);
+        // Get the UI bundle files
+        Path uiBundlePath = projectDir.resolve("cline-jetbrains/dist/ui-bundle.js");
+        Path uiStylesPath = projectDir.resolve("cline-jetbrains/dist/ui-styles.css");
         
-        // Clear the input area
-        inputArea.setText("");
+        if (!Files.exists(uiBundlePath) || !Files.exists(uiStylesPath)) {
+            LOG.warn("UI bundle files not found");
+            loadDefaultUI();
+            return;
+        }
         
-        // Append the input to the output area
-        outputArea.append("\n\nYou: " + input);
+        try {
+            // Read the UI bundle files
+            String uiBundle = new String(Files.readAllBytes(uiBundlePath));
+            String uiStyles = new String(Files.readAllBytes(uiStylesPath));
+            
+            // Create the HTML
+            String html = "<!DOCTYPE html>\n" +
+                    "<html>\n" +
+                    "<head>\n" +
+                    "    <title>Cline</title>\n" +
+                    "    <style>\n" +
+                    "        body { margin: 0; padding: 0; }\n" +
+                    "        #root { height: 100vh; }\n" +
+                    uiStyles +
+                    "    </style>\n" +
+                    "</head>\n" +
+                    "<body>\n" +
+                    "    <div id=\"root\"></div>\n" +
+                    "    <script>\n" +
+                    uiBundle +
+                    "    </script>\n" +
+                    "</body>\n" +
+                    "</html>";
+            
+            // Load the HTML
+            browser.loadHTML(html);
+            
+            // Add a load handler to detect when the page is loaded
+            browser.getJBCefClient().addLoadHandler(new CefLoadHandlerAdapter() {
+                @Override
+                public void onLoadEnd(CefBrowser cefBrowser, CefFrame frame, int httpStatusCode) {
+                    LOG.info("UI HTML loaded");
+                    
+                    // Initialize the UI bridge
+                    injectJSQueries();
+                    
+                    // Initialize the UI
+                    initializeUIBridge();
+                }
+            }, browser.getCefBrowser());
+        } catch (Exception e) {
+            LOG.error("Failed to load UI bundle files", e);
+            loadDefaultUI();
+        }
+    }
+    
+    /**
+     * Load the default UI when the TypeScript UI cannot be loaded.
+     */
+    private void loadDefaultUI() {
+        String html = "<!DOCTYPE html>\n" +
+                "<html>\n" +
+                "<head>\n" +
+                "    <title>Cline</title>\n" +
+                "    <style>\n" +
+                "        body { margin: 20px; font-family: system-ui; }\n" +
+                "    </style>\n" +
+                "</head>\n" +
+                "<body>\n" +
+                "    <h1>Cline - AI Coding Assistant</h1>\n" +
+                "    <p>Failed to load the TypeScript UI. Please check the logs for more information.</p>\n" +
+                "</body>\n" +
+                "</html>";
         
-        // TODO: Process the input using the TypeScript bridge
-        outputArea.append("\n\nCline: Processing your request...");
+        browser.loadHTML(html);
+    }
+    
+    /**
+     * Inject the JS queries into the browser.
+     */
+    private void injectJSQueries() {
+        for (int i = 0; i < jsQueries.size(); i++) {
+            JBCefJSQuery query = jsQueries.get(i);
+            String queryName = "jsQuery" + i;
+            query.inject(queryName);
+        }
+    }
+    
+    /**
+     * Initialize the UI bridge.
+     */
+    private void initializeUIBridge() {
+        String initScript = "window.initializeBridge({" +
+                "projectName: '" + project.getName() + "'," +
+                "projectPath: '" + project.getBasePath() + "'," +
+                "state: {}" +
+                "});";
         
-        // For now, just simulate a response
-        SwingUtilities.invokeLater(() -> {
-            try {
-                Thread.sleep(1000);
-                outputArea.append("\n\nThis is a placeholder response. The TypeScript bridge integration is not yet implemented.");
-            } catch (InterruptedException ex) {
-                LOG.error("Error while simulating response", ex);
-            }
-        });
+        browser.getCefBrowser().executeJavaScript(initScript, browser.getCefBrowser().getURL(), 0);
+    }
+    
+    /**
+     * Dispose the panel.
+     */
+    public void dispose() {
+        LOG.info("Disposing Cline tool window panel");
+        
+        // Dispose JS queries
+        for (JBCefJSQuery query : jsQueries) {
+            query.dispose();
+        }
+        jsQueries.clear();
+        
+        // Dispose browser
+        if (browser != null) {
+            browser.dispose();
+            browser = null;
+        }
     }
 }
