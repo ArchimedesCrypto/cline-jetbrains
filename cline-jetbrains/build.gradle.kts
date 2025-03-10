@@ -8,7 +8,7 @@ plugins {
 }
 
 group = "com.cline"
-version = "1.0.0"
+version = "0.0.2"
 
 repositories {
     mavenCentral()
@@ -76,7 +76,7 @@ tasks {
         
         // Plugin change notes visible in the Marketplace
         changeNotes.set("""
-            Initial release of Cline for JetBrains IDEs.
+            v0.0.2 release of Cline for JetBrains IDEs.
         """.trimIndent())
     }
 

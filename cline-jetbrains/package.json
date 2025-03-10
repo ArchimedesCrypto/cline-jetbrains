@@ -1,6 +1,6 @@
 {
   "name": "cline-jetbrains",
-  "version": "1.0.0",
+  "version": "0.0.2",
   "description": "Cline for JetBrains IDEs",
   "main": "dist/bridge.js",
   "scripts": {
