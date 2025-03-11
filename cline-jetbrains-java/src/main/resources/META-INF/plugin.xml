@@ -1,0 +1,53 @@
+<idea-plugin>
+    <id>com.cline.jetbrains</id>
+    <name>Cline - AI Coding Assistant</name>
+    <vendor email="support@cline.com" url="https://cline.com">Cline</vendor>
+
+    <description><![CDATA[
+        Cline for JetBrains IDEs - AI-assisted coding agent (Java Implementation).
+        
+        Cline is an AI assistant that can use your CLI and Editor to help with complex software development tasks.
+        It can create and edit files, explore large projects, use the browser, and execute terminal commands
+        (after you grant permission).
+        
+        This is a pure Java implementation with feature parity to the VSCode version.
+    ]]></description>
+
+    <depends>com.intellij.modules.platform</depends>
+    <depends>com.intellij.modules.java</depends>
+    <depends>org.jetbrains.plugins.terminal</depends>
+    <depends>com.intellij.database</depends>
+
+    <extensions defaultExtensionNs="com.intellij">
+        <!-- Tool Window -->
+        <toolWindow id="Cline"
+                    anchor="right"
+                    factoryClass="com.cline.ui.ClineToolWindowFactory"
+                    icon="/icons/cline_icon.svg"/>
+                    
+        <!-- Services -->
+        <applicationService serviceImplementation="com.cline.services.ClineSettingsService"/>
+        <applicationService serviceImplementation="com.cline.services.ClineApiService"/>
+        <applicationService serviceImplementation="com.cline.services.ClineFileService"/>
+        <applicationService serviceImplementation="com.cline.services.ClineTerminalService"/>
+        
+        <!-- Settings -->
+        <applicationConfigurable
+                parentId="tools"
+                instance="com.cline.ui.settings.ClineSettingsConfigurable"
+                id="com.cline.ui.settings.ClineSettingsConfigurable"
+                displayName="Cline AI Assistant"/>
+    </extensions>
+
+    <actions>
+        <group id="Cline.ActionGroup" text="Cline" description="Cline AI Assistant actions">
+            <add-to-group group-id="ToolsMenu" anchor="last"/>
+            <action id="Cline.NewTask" 
+                    class="com.cline.actions.NewTaskAction" 
+                    text="New Cline Task" 
+                    description="Create a new Cline task">
+                <keyboard-shortcut keymap="$default" first-keystroke="ctrl shift C"/>
+            </action>
+        </group>
+    </actions>
+</idea-plugin>
