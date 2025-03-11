@@ -1,12 +1,12 @@
 <idea-plugin>
-  <version>1.0.0</version>
-  <change-notes><![CDATA[Initial release of Cline for JetBrains IDEs.]]></change-notes>
+  <version>0.0.2</version>
+  <change-notes><![CDATA[v0.0.2 release of Cline for JetBrains IDEs.]]></change-notes>
   <description><![CDATA[Cline for JetBrains IDEs - AI-assisted coding agent.
 
 Cline is an AI assistant that can use your CLI and Editor to help with complex software development tasks.
 It can create and edit files, explore large projects, use the browser, and execute terminal commands
 (after you grant permission).]]></description>
-  <idea-version since-build="233" until-build="243.*" />
+  <idea-version since-build="241" until-build="251.*" />
   <id>com.cline.jetbrains</id>
   <name>Cline</name>
   <vendor>Cline Bot Inc.</vendor>
