@@ -47,7 +47,22 @@ esbuild
       'process.env.PLATFORM': '"jetbrains"'
     },
     external: [
-      'vscode'  // Exclude vscode from the bundle
+      'vscode',  // Exclude vscode from the bundle
+      'react',
+      'react-dom',
+      'react/jsx-runtime',
+      'react-use',
+      'styled-components',
+      'react-virtuoso',
+      'react-remark',
+      'rehype-highlight',
+      'unist-util-visit',
+      'fuse.js',
+      'debounce',
+      'pretty-bytes',
+      'react-textarea-autosize',
+      '@vscode/webview-ui-toolkit/react',
+      '@floating-ui/react'
     ],
     plugins: [
       {
