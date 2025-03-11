@@ -1,0 +1,77 @@
+# Cline JetBrains Java Implementation Rules
+
+## Project Structure
+- The Java implementation is located in the `cline-jetbrains-java` directory
+- UI components are in the `com.cline.ui` package
+- Service classes are in the `com.cline.services` package
+- Core model classes are in the `com.cline.core.model` package
+- Tool-related classes are in the `com.cline.core.tool` package
+
+## Coding Patterns
+- Use JetBrains UI components (JB* classes) for UI elements
+- Follow the singleton pattern for service classes
+- Use factory methods for creating model instances
+- Follow the observer pattern for event handling
+- Use builder pattern for constructing complex UI components
+
+## UI Guidelines
+- Use JetBrains design patterns and styling
+- Support both light and dark themes
+- Ensure accessibility for all UI components
+- Use proper spacing and alignment
+- Follow JetBrains' UI component hierarchy
+
+## Naming Conventions
+- Class names: PascalCase (e.g., `ChatView`, `MessageRole`)
+- Method names: camelCase (e.g., `createUserMessage`, `setConversation`)
+- Variable names: camelCase (e.g., `apiKeyField`, `toolComboBox`)
+- Constant names: UPPER_SNAKE_CASE (e.g., `MAX_IMAGES_PER_MESSAGE`)
+- Package names: lowercase (e.g., `com.cline.ui`, `com.cline.services`)
+
+## Documentation
+- Use JavaDoc for all public classes and methods
+- Include parameter and return value documentation
+- Document exceptions that may be thrown
+- Add implementation notes for complex logic
+- Include examples where appropriate
+
+## Testing
+- Write unit tests for all non-UI classes
+- Use JUnit for testing
+- Mock external dependencies
+- Test edge cases and error conditions
+- Ensure test coverage for critical functionality
+
+## Git Workflow
+- Create feature branches for new features
+- Use descriptive commit messages
+- Reference issue numbers in commit messages
+- Keep commits focused on a single change
+- Squash commits before merging
+
+## Build Process
+- Use Gradle for building the plugin
+- Follow JetBrains plugin development guidelines
+- Ensure compatibility with all JetBrains IDEs
+- Test the plugin with different JetBrains IDE versions
+
+## Critical Implementation Paths
+- UI component initialization and rendering
+- API communication and message handling
+- Tool execution and result processing
+- File system operations
+- Terminal command execution
+
+## Known Challenges
+- Markdown rendering in Swing
+- Code block rendering with syntax highlighting
+- Image support in messages
+- Performance with large conversations
+- Threading model for long-running operations
+
+## User Preferences
+- Clean, native-looking UI that matches JetBrains styling
+- Fast and responsive interface
+- Reliable functionality
+- Consistent behavior across different JetBrains IDEs
+- Clear error messages and feedback
