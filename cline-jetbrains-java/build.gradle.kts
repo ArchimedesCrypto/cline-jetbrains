@@ -1,4 +1,3 @@
-
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
@@ -37,9 +36,11 @@ dependencies {
     implementation("ch.qos.logback:logback-classic:1.4.14") // Logging implementation
     
     // Testing dependencies
-    testImplementation("junit:junit:4.13.2")
-    testImplementation("org.mockito:mockito-core:5.3.1")
-    testImplementation("org.assertj:assertj-core:3.24.2")
+    testImplementation("org.junit.jupiter:junit-jupiter-api:5.10.1") // JUnit 5 API
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.10.1") // JUnit 5 Engine
+    testImplementation("org.mockito:mockito-core:5.3.1") // Mockito for mocking
+    testImplementation("org.mockito:mockito-junit-jupiter:5.3.1") // Mockito JUnit 5 integration
+    testImplementation("org.assertj:assertj-core:3.24.2") // AssertJ for fluent assertions
 }
 
 tasks {
@@ -61,9 +62,12 @@ tasks {
         enabled = false
     }
     
-    // Skip tests since we're just trying to build the plugin
+    // Configure test task to use JUnit 5
     test {
-        enabled = false
+        useJUnitPlatform() // Use JUnit 5 platform
+        testLogging {
+            events("passed", "skipped", "failed")
+        }
     }
 
     patchPluginXml {
