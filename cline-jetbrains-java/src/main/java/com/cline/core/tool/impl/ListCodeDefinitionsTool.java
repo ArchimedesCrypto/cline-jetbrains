@@ -3,28 +3,33 @@ package com.cline.core.tool.impl;
 import com.cline.core.tool.AbstractTool;
 import com.cline.core.tool.ToolResult;
 import com.cline.services.ClineFileService;
+import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
 /**
- * Tool for reading files.
+ * Tool for listing code definitions in a directory.
  */
-public class ReadFileTool extends AbstractTool {
-    private static final String NAME = "read_file";
-    private static final String DESCRIPTION = "Read the contents of a file";
+public class ListCodeDefinitionsTool extends AbstractTool {
+    private static final Logger LOG = Logger.getInstance(ListCodeDefinitionsTool.class);
+    private static final String NAME = "list_code_definition_names";
+    private static final String DESCRIPTION = "List code definition names in a directory";
     
     private final Project project;
     private final ClineFileService fileService;
     
     /**
-     * Creates a new read file tool.
+     * Creates a new list code definitions tool.
      *
      * @param project The project
      */
-    public ReadFileTool(Project project) {
+    public ListCodeDefinitionsTool(Project project) {
         super(NAME, DESCRIPTION, createInputSchema());
         this.project = project;
         this.fileService = ClineFileService.getInstance(project);
@@ -42,7 +47,7 @@ public class ReadFileTool extends AbstractTool {
         
         JsonObject pathProperty = new JsonObject();
         pathProperty.addProperty("type", "string");
-        pathProperty.addProperty("description", "The path of the file to read");
+        pathProperty.addProperty("description", "The path of the directory to list code definitions for");
         properties.add("path", pathProperty);
         
         schema.add("properties", properties);
@@ -56,7 +61,11 @@ public class ReadFileTool extends AbstractTool {
     
     @Override
     public boolean validateArgs(@NotNull JsonObject args) {
-        return args.has("path") && args.get("path").isJsonPrimitive() && args.get("path").getAsJsonPrimitive().isString();
+        if (!args.has("path") || !args.get("path").isJsonPrimitive() || !args.get("path").getAsJsonPrimitive().isString()) {
+            return false;
+        }
+        
+        return true;
     }
     
     @Override
@@ -68,6 +77,7 @@ public class ReadFileTool extends AbstractTool {
         if (!args.get("path").isJsonPrimitive() || !args.get("path").getAsJsonPrimitive().isString()) {
             return "Parameter 'path' must be a string";
         }
+        
         return null;
     }
     
@@ -77,15 +87,32 @@ public class ReadFileTool extends AbstractTool {
         CompletableFuture<ToolResult> future = new CompletableFuture<>();
         
         try {
-            // Get the path parameter
+            // Get the parameters
             String path = args.get("path").getAsString();
             
-            // Read the file
-            fileService.readFile(path)
-                    .thenAccept(content -> {
+            // List the code definitions
+            fileService.listCodeDefinitions(path)
+                    .thenAccept(definitions -> {
                         // Create a result object
                         JsonObject result = new JsonObject();
-                        result.addProperty("content", content);
+                        JsonArray filesArray = new JsonArray();
+                        
+                        for (Map.Entry<String, List<String>> entry : definitions.entrySet()) {
+                            JsonObject fileDefinitions = new JsonObject();
+                            fileDefinitions.addProperty("file", entry.getKey());
+                            
+                            JsonArray definitionsArray = new JsonArray();
+                            for (String definition : entry.getValue()) {
+                                definitionsArray.add(definition);
+                            }
+                            
+                            fileDefinitions.add("definitions", definitionsArray);
+                            filesArray.add(fileDefinitions);
+                        }
+                        
+                        result.add("files", filesArray);
+                        result.addProperty("count", filesArray.size());
+                        result.addProperty("path", path);
                         
                         // Complete the future with the result
                         completeSuccessfully(future, result);
