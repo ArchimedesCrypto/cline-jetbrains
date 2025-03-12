@@ -1,0 +1,15 @@
+docs: Add TypeScript-Java comparison and feature implementation plan
+
+This commit adds two documentation files:
+
+1. typescript-java-comparison.md - A detailed comparison between the TypeScript and Java implementations of the Cline plugin, identifying gaps and missing features.
+
+2. feature-implementation-plan.md - A comprehensive plan for implementing the missing features, including:
+   - Browser functionality implementation using JxBrowser
+   - Multiple API providers support
+   - Prompt caching implementation
+   - MCP integration
+   - Auto-approval implementation
+   - UI animations
+
+These documents will guide the next phase of development to ensure feature parity between the TypeScript and Java implementations.

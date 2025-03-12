@@ -13,12 +13,13 @@ import java.util.UUID;
  */
 public class Message {
     private final String id;
-    private final String content;
+    private String content;
     private final MessageRole role;
     private final Instant timestamp;
-    private final JsonObject metadata;
-    private final String toolName;
-    private final JsonObject toolResult;
+    private JsonObject metadata;
+    private String toolName;
+    private JsonObject toolInput;
+    private JsonObject toolResult;
 
     /**
      * Creates a new message.
@@ -32,12 +33,12 @@ public class Message {
      * @param toolResult The result of the tool execution if this is a tool message (optional)
      */
     public Message(@Nullable String id,
-                  @NotNull String content,
-                  @NotNull MessageRole role,
-                  @Nullable Instant timestamp,
-                  @Nullable JsonObject metadata,
-                  @Nullable String toolName,
-                  @Nullable JsonObject toolResult) {
+                   @NotNull String content,
+                   @NotNull MessageRole role,
+                   @Nullable Instant timestamp,
+                   @Nullable JsonObject metadata,
+                   @Nullable String toolName,
+                   @Nullable JsonObject toolResult) {
         this.id = id != null ? id : UUID.randomUUID().toString();
         this.content = content;
         this.role = role;
@@ -108,6 +109,15 @@ public class Message {
     }
 
     /**
+     * Sets the message content.
+     *
+     * @param content The new content
+     */
+    public void setContent(String content) {
+        this.content = content;
+    }
+
+    /**
      * Gets the message role.
      *
      * @return The message role
@@ -135,6 +145,15 @@ public class Message {
     }
 
     /**
+     * Sets the message metadata.
+     *
+     * @param metadata The new metadata
+     */
+    public void setMetadata(JsonObject metadata) {
+        this.metadata = metadata != null ? metadata : new JsonObject();
+    }
+
+    /**
      * Gets the name of the tool if this is a tool message.
      *
      * @return The name of the tool, or null if this is not a tool message
@@ -145,6 +164,34 @@ public class Message {
     }
 
     /**
+     * Sets the name of the tool.
+     *
+     * @param toolName The name of the tool
+     */
+    public void setToolName(String toolName) {
+        this.toolName = toolName;
+    }
+
+    /**
+     * Gets the tool input if this is a tool use message.
+     *
+     * @return The tool input, or null if this is not a tool use message
+     */
+    @Nullable
+    public JsonObject getToolInput() {
+        return toolInput;
+    }
+
+    /**
+     * Sets the tool input.
+     *
+     * @param toolInput The tool input
+     */
+    public void setToolInput(JsonObject toolInput) {
+        this.toolInput = toolInput;
+    }
+
+    /**
      * Gets the result of the tool execution if this is a tool message.
      *
      * @return The result of the tool execution, or null if this is not a tool message
@@ -152,6 +199,15 @@ public class Message {
     @Nullable
     public JsonObject getToolResult() {
         return toolResult;
+    }
+
+    /**
+     * Sets the tool result.
+     *
+     * @param toolResult The tool result
+     */
+    public void setToolResult(JsonObject toolResult) {
+        this.toolResult = toolResult;
     }
 
     /**

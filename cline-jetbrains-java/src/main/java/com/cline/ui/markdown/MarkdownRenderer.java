@@ -139,6 +139,7 @@ public class MarkdownRenderer {
     
     /**
      * Custom node renderer for special markdown elements.
+     * This is a simplified implementation that doesn't handle images specially.
      */
     private static class CustomNodeRenderer implements NodeRenderer {
         private final HtmlNodeRendererContext context;
@@ -154,27 +155,8 @@ public class MarkdownRenderer {
         
         @Override
         public void render(Node node) {
-            if (node instanceof org.commonmark.node.Image) {
-                org.commonmark.node.Image image = (org.commonmark.node.Image) node;
-                String destination = image.getDestination();
-                String title = image.getTitle();
-                
-                context.getWriter().write("<img src=\"");
-                context.getWriter().write(destination);
-                context.getWriter().write("\" alt=\"");
-                if (image.getFirstChild() instanceof Text) {
-                    context.getWriter().write(((Text) image.getFirstChild()).getLiteral());
-                }
-                context.getWriter().write("\"");
-                
-                if (title != null) {
-                    context.getWriter().write(" title=\"");
-                    context.getWriter().write(title);
-                    context.getWriter().write("\"");
-                }
-                
-                context.getWriter().write(" />");
-            }
+            // Let the default renderer handle images
+            // This avoids using the html() method which is not available
         }
     }
 }

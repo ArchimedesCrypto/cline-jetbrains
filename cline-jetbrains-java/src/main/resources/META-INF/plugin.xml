@@ -25,11 +25,16 @@
                     factoryClass="com.cline.ui.ClineToolWindowFactory"
                     icon="/icons/cline_icon.svg"/>
                     
-        <!-- Services -->
+        <!-- Application Services -->
         <applicationService serviceImplementation="com.cline.services.ClineSettingsService"/>
         <applicationService serviceImplementation="com.cline.services.ClineApiService"/>
-        <applicationService serviceImplementation="com.cline.services.ClineFileService"/>
-        <applicationService serviceImplementation="com.cline.services.ClineTerminalService"/>
+        
+        <!-- Project Services -->
+        <projectService serviceImplementation="com.cline.services.ClineFileService"/>
+        <projectService serviceImplementation="com.cline.services.ClineTerminalService"/>
+        <projectService serviceImplementation="com.cline.services.ClineBrowserService"/>
+        <projectService serviceImplementation="com.cline.core.tool.ToolExecutor"/>
+        <projectService serviceImplementation="com.cline.core.tool.ToolRegistry"/>
         
         <!-- Settings -->
         <applicationConfigurable

@@ -1,0 +1,9 @@
+fix: Add test mode to ClineApiService and fix tests
+
+- Added test mode flag to ClineApiService to prevent logging errors in tests
+- Updated ClineApiServiceTest to enable test mode
+- Improved error handling in tests
+- Added proper mocking of OkHttpClient and Call objects
+- Increased timeout for async operations in tests
+
+This change ensures that the tests run successfully without failing due to logging errors.

@@ -2,6 +2,7 @@ package com.cline.ui.chat;
 
 import com.cline.core.model.Conversation;
 import com.cline.core.model.Message;
+import com.cline.ui.markdown.MarkdownRenderer;
 import com.intellij.icons.AllIcons;
 import com.intellij.ui.JBColor;
 import com.intellij.ui.components.JBLabel;
@@ -26,6 +27,7 @@ public class TaskHeader extends JPanel {
     
     private final Message task;
     private final Conversation conversation;
+    private final MarkdownRenderer markdownRenderer;
     
     /**
      * Creates a new task header.
@@ -36,6 +38,7 @@ public class TaskHeader extends JPanel {
     public TaskHeader(@NotNull Message task, @NotNull Conversation conversation) {
         this.task = task;
         this.conversation = conversation;
+        this.markdownRenderer = new MarkdownRenderer();
         
         setLayout(new BorderLayout());
         setBorder(JBUI.Borders.compound(
@@ -55,13 +58,12 @@ public class TaskHeader extends JPanel {
         taskInfoPanel.setOpaque(false);
         
         // Task text
-        JTextArea taskTextArea = new JTextArea(task.getContent());
-        taskTextArea.setEditable(false);
-        taskTextArea.setWrapStyleWord(true);
-        taskTextArea.setLineWrap(true);
-        taskTextArea.setOpaque(false);
-        taskTextArea.setFont(taskTextArea.getFont().deriveFont(Font.BOLD));
-        taskTextArea.setBorder(JBUI.Borders.empty());
+        JTextPane taskTextPane = new JTextPane();
+        taskTextPane.setEditable(false);
+        taskTextPane.setOpaque(false);
+        
+        // Render the task content as markdown
+        markdownRenderer.render(task.getContent(), taskTextPane);
         
         // Task timestamp
         SimpleDateFormat dateFormat = new SimpleDateFormat("MMM d, yyyy h:mm a");
@@ -72,14 +74,34 @@ public class TaskHeader extends JPanel {
         timestampLabel.setFont(timestampLabel.getFont().deriveFont(Font.PLAIN, 11f));
         timestampLabel.setBorder(JBUI.Borders.empty(5, 0, 0, 0));
         
-        taskInfoPanel.add(taskTextArea, BorderLayout.CENTER);
+        taskInfoPanel.add(taskTextPane, BorderLayout.CENTER);
         taskInfoPanel.add(timestampLabel, BorderLayout.SOUTH);
         
         // Metrics panel (right side)
         JPanel metricsPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         metricsPanel.setOpaque(false);
         
-        // TODO: Add metrics like tokens in/out, cost, etc.
+        // Add metrics like tokens in/out, cost, etc.
+        if (task.getMetadata() != null) {
+            if (task.getMetadata().has("inputTokens") && task.getMetadata().has("outputTokens")) {
+                int inputTokens = task.getMetadata().get("inputTokens").getAsInt();
+                int outputTokens = task.getMetadata().get("outputTokens").getAsInt();
+                
+                JBLabel tokensLabel = new JBLabel(String.format("Tokens: %d in / %d out", inputTokens, outputTokens));
+                tokensLabel.setForeground(JBColor.gray);
+                tokensLabel.setFont(tokensLabel.getFont().deriveFont(Font.PLAIN, 11f));
+                metricsPanel.add(tokensLabel);
+            }
+            
+            if (task.getMetadata().has("cost")) {
+                double cost = task.getMetadata().get("cost").getAsDouble();
+                
+                JBLabel costLabel = new JBLabel(String.format("Cost: $%.4f", cost));
+                costLabel.setForeground(JBColor.gray);
+                costLabel.setFont(costLabel.getFont().deriveFont(Font.PLAIN, 11f));
+                metricsPanel.add(costLabel);
+            }
+        }
         
         // Close button
         JButton closeButton = new JButton(AllIcons.Actions.Close);
@@ -89,7 +111,8 @@ public class TaskHeader extends JPanel {
         closeButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                // TODO: Implement close action
+                // Hide the task header
+                setVisible(false);
             }
         });
         

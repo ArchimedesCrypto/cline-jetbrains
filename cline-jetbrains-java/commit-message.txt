@@ -1,0 +1,8 @@
+feat: Add JUnit 5 dependencies for testing
+
+- Replace JUnit 4 with JUnit 5 dependencies
+- Add Mockito JUnit 5 integration
+- Configure test task to use JUnit platform
+- Enable test logging for better visibility
+
+This change ensures compatibility with the existing test files that use JUnit 5 annotations and assertions.

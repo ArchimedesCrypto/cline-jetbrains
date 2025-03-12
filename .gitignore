@@ -8,3 +8,10 @@ tmp
 .DS_Store
 
 pnpm-lock.yaml
+
+cline-jetbrains-java/.gradle
+cline-jetbrains-java/build
+
+
+cline-jetbrains/.gradle
+cline-jetbrains/build

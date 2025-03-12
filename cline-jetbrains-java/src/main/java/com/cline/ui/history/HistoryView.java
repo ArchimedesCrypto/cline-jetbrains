@@ -1,6 +1,7 @@
 package com.cline.ui.history;
 
 import com.cline.core.model.Conversation;
+import com.cline.services.ClineHistoryService;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
 import com.intellij.ui.components.JBList;
@@ -10,7 +11,6 @@ import com.intellij.util.ui.JBUI;
 import javax.swing.*;
 import java.awt.*;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.function.Consumer;
@@ -23,7 +23,7 @@ public class HistoryView extends JPanel {
     private static final Logger LOG = Logger.getInstance(HistoryView.class);
     
     private final Project project;
-    private final List<Conversation> conversations = new ArrayList<>();
+    private final ClineHistoryService historyService;
     
     private JBList<Conversation> conversationList;
     private DefaultListModel<Conversation> listModel;
@@ -38,6 +38,7 @@ public class HistoryView extends JPanel {
     public HistoryView(Project project) {
         super(new BorderLayout());
         this.project = project;
+        this.historyService = ClineHistoryService.getInstance(project);
         
         setBorder(JBUI.Borders.empty(10));
         
@@ -86,24 +87,19 @@ public class HistoryView extends JPanel {
     }
     
     /**
-     * Loads conversations from storage.
+     * Loads conversations from the history service.
      */
     private void loadConversations() {
-        // TODO: Load conversations from storage
-        // For now, we'll just add some dummy conversations
-        for (int i = 1; i <= 5; i++) {
-            Conversation conversation = Conversation.createEmpty();
-            conversation.setTitle("Conversation " + i);
-            conversations.add(conversation);
-        }
-        
-        updateList();
+        List<Conversation> conversations = historyService.getConversations();
+        updateList(conversations);
     }
     
     /**
-     * Updates the list with the current conversations.
+     * Updates the list with the given conversations.
+     *
+     * @param conversations The conversations to display
      */
-    private void updateList() {
+    private void updateList(List<Conversation> conversations) {
         listModel.clear();
         for (Conversation conversation : conversations) {
             listModel.addElement(conversation);
@@ -114,9 +110,88 @@ public class HistoryView extends JPanel {
      * Clears the conversation history.
      */
     private void clearHistory() {
-        // TODO: Clear conversations from storage
-        conversations.clear();
-        updateList();
+        int result = JOptionPane.showConfirmDialog(
+                this,
+                "Are you sure you want to clear all conversation history?",
+                "Clear History",
+                JOptionPane.YES_NO_OPTION,
+                JOptionPane.WARNING_MESSAGE
+        );
+        
+        if (result == JOptionPane.YES_OPTION) {
+            historyService.clearHistory()
+                    .thenRun(() -> {
+                        SwingUtilities.invokeLater(() -> {
+                            listModel.clear();
+                            JOptionPane.showMessageDialog(
+                                    this,
+                                    "Conversation history cleared.",
+                                    "Clear History",
+                                    JOptionPane.INFORMATION_MESSAGE
+                            );
+                        });
+                    })
+                    .exceptionally(e -> {
+                        LOG.error("Error clearing history", e);
+                        SwingUtilities.invokeLater(() -> {
+                            JOptionPane.showMessageDialog(
+                                    this,
+                                    "Error clearing history: " + e.getMessage(),
+                                    "Error",
+                                    JOptionPane.ERROR_MESSAGE
+                            );
+                        });
+                        return null;
+                    });
+        }
+    }
+    
+    /**
+     * Adds a conversation to the history.
+     *
+     * @param conversation The conversation to add
+     */
+    public void addConversation(Conversation conversation) {
+        historyService.addConversation(conversation)
+                .thenRun(() -> {
+                    SwingUtilities.invokeLater(this::loadConversations);
+                })
+                .exceptionally(e -> {
+                    LOG.error("Error adding conversation to history", e);
+                    return null;
+                });
+    }
+    
+    /**
+     * Updates a conversation in the history.
+     *
+     * @param conversation The conversation to update
+     */
+    public void updateConversation(Conversation conversation) {
+        historyService.updateConversation(conversation)
+                .thenRun(() -> {
+                    SwingUtilities.invokeLater(this::loadConversations);
+                })
+                .exceptionally(e -> {
+                    LOG.error("Error updating conversation in history", e);
+                    return null;
+                });
+    }
+    
+    /**
+     * Removes a conversation from the history.
+     *
+     * @param conversation The conversation to remove
+     */
+    public void removeConversation(Conversation conversation) {
+        historyService.removeConversation(conversation)
+                .thenRun(() -> {
+                    SwingUtilities.invokeLater(this::loadConversations);
+                })
+                .exceptionally(e -> {
+                    LOG.error("Error removing conversation from history", e);
+                    return null;
+                });
     }
     
     /**

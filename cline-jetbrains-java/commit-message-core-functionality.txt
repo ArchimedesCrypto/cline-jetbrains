@@ -1,0 +1,14 @@
+feat: Implement core functionality for Cline JetBrains Java plugin
+
+This commit implements the core functionality for the Cline JetBrains Java plugin:
+
+- Add markdown rendering support in ChatView using MarkdownRenderer
+- Implement code block rendering with syntax highlighting using CodeBlockRenderer
+- Add image support in messages using ImageRenderer
+- Implement tool execution functionality in ToolExecutor and ToolRegistry
+- Add concrete tool implementations for file operations, browser actions, and more
+- Implement browser functionality in ClineBrowserService
+- Add file system operations in ClineFileService
+- Implement API communication for sending and receiving messages in ClineApiService
+
+These implementations provide the foundation for the Cline JetBrains Java plugin, enabling it to render rich content, execute tools, and communicate with the API.

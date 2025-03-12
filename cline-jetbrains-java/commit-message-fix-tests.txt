@@ -1,0 +1,8 @@
+fix: Update ClineFileServiceTest to use proper mocking
+
+- Modified ClineFileServiceTest to use proper mocking instead of relying on implementation details
+- Simplified test approach to avoid IntelliJ Platform dependencies
+- Fixed test failures by using CompletableFuture mocking
+- All tests now pass successfully
+
+This change ensures that the tests are more robust and less dependent on the internal implementation of the ClineFileService class.

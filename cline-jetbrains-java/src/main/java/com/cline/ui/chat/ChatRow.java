@@ -2,26 +2,35 @@ package com.cline.ui.chat;
 
 import com.cline.core.model.Message;
 import com.cline.core.model.MessageRole;
+import com.cline.ui.code.CodeBlockRenderer;
+import com.cline.ui.image.ImageRenderer;
+import com.cline.ui.markdown.MarkdownRenderer;
 import com.intellij.icons.AllIcons;
 import com.intellij.openapi.project.Project;
 import com.intellij.ui.JBColor;
 import com.intellij.ui.components.JBLabel;
 import com.intellij.ui.components.JBPanel;
+import com.intellij.ui.components.JBScrollPane;
 import com.intellij.util.ui.JBUI;
 import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Component for displaying a single message in the chat.
  * This is the Java equivalent of the ChatRow.tsx component in the TypeScript version.
  */
 public class ChatRow extends JBPanel<ChatRow> {
+    private static final Pattern CODE_BLOCK_PATTERN = Pattern.compile("```(\\w*)\\s*([\\s\\S]*?)```");
+    private static final Pattern IMAGE_PATTERN = Pattern.compile("!\\[(.*?)\\]\\((.*?)\\)");
+    
     private final Message message;
     private final Project project;
+    private final MarkdownRenderer markdownRenderer;
+    private final CodeBlockRenderer codeBlockRenderer;
     
     private boolean isExpanded = false;
     private JPanel contentPanel;
@@ -36,6 +45,8 @@ public class ChatRow extends JBPanel<ChatRow> {
         super(new BorderLayout());
         this.message = message;
         this.project = project;
+        this.markdownRenderer = new MarkdownRenderer();
+        this.codeBlockRenderer = new CodeBlockRenderer(project);
         
         setBorder(JBUI.Borders.empty(10, 6, 10, 15));
         setOpaque(false);
@@ -51,7 +62,8 @@ public class ChatRow extends JBPanel<ChatRow> {
         JPanel headerPanel = createHeaderPanel();
         
         // Create content panel
-        contentPanel = new JPanel(new BorderLayout());
+        contentPanel = new JPanel();
+        contentPanel.setLayout(new BoxLayout(contentPanel, BoxLayout.Y_AXIS));
         contentPanel.setOpaque(false);
         contentPanel.setBorder(JBUI.Borders.emptyTop(10));
         
@@ -169,30 +181,79 @@ public class ChatRow extends JBPanel<ChatRow> {
      * Adds tool use content to the content panel.
      */
     private void addToolUseContent() {
-        // TODO: Implement tool use content
-        JTextArea textArea = new JTextArea("Tool use content: " + message.getContent());
-        textArea.setEditable(false);
-        textArea.setWrapStyleWord(true);
-        textArea.setLineWrap(true);
-        textArea.setOpaque(false);
-        textArea.setBorder(JBUI.Borders.empty());
+        String content = message.getContent();
         
-        contentPanel.add(textArea, BorderLayout.CENTER);
+        // Create a panel for the tool use content
+        JPanel toolUsePanel = new JPanel(new BorderLayout());
+        toolUsePanel.setOpaque(true);
+        toolUsePanel.setBackground(JBColor.namedColor("ToolWindow.background", JBColor.background().brighter()));
+        toolUsePanel.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(JBColor.border()),
+                JBUI.Borders.empty(10)
+        ));
+        
+        // Create a text pane for the content
+        JTextPane textPane = new JTextPane();
+        textPane.setEditable(false);
+        textPane.setOpaque(false);
+        
+        // Render the content as markdown
+        markdownRenderer.render(content, textPane);
+        
+        // Add the text pane to the tool use panel
+        toolUsePanel.add(textPane, BorderLayout.CENTER);
+        
+        // Add buttons for tool approval/rejection
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        buttonPanel.setOpaque(false);
+        
+        JButton approveButton = new JButton("Approve", AllIcons.Actions.Commit);
+        JButton rejectButton = new JButton("Reject", AllIcons.Actions.Cancel);
+        
+        buttonPanel.add(approveButton);
+        buttonPanel.add(rejectButton);
+        
+        toolUsePanel.add(buttonPanel, BorderLayout.SOUTH);
+        
+        // Add the tool use panel to the content panel
+        contentPanel.add(toolUsePanel);
     }
     
     /**
      * Adds command content to the content panel.
      */
     private void addCommandContent() {
-        // TODO: Implement command content
-        JTextArea textArea = new JTextArea("Command content: " + message.getContent());
-        textArea.setEditable(false);
-        textArea.setWrapStyleWord(true);
-        textArea.setLineWrap(true);
-        textArea.setOpaque(false);
-        textArea.setBorder(JBUI.Borders.empty());
+        String content = message.getContent();
         
-        contentPanel.add(textArea, BorderLayout.CENTER);
+        // Create a panel for the command content
+        JPanel commandPanel = new JPanel(new BorderLayout());
+        commandPanel.setOpaque(true);
+        commandPanel.setBackground(JBColor.namedColor("ToolWindow.background", JBColor.background().brighter()));
+        commandPanel.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(JBColor.border()),
+                JBUI.Borders.empty(10)
+        ));
+        
+        // Create a component for the command
+        JComponent codeComponent = codeBlockRenderer.createCodeComponent(content, "bash");
+        
+        // Add the code component to the command panel
+        commandPanel.add(codeComponent, BorderLayout.CENTER);
+        
+        // Add buttons for command approval/rejection
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        buttonPanel.setOpaque(false);
+        
+        JButton approveButton = new JButton("Approve", AllIcons.Actions.Commit);
+        JButton rejectButton = new JButton("Reject", AllIcons.Actions.Cancel);
+        
+        buttonPanel.add(approveButton);
+        buttonPanel.add(rejectButton);
+        
+        commandPanel.add(buttonPanel, BorderLayout.SOUTH);
+        
+        // Add the command panel to the content panel
+        contentPanel.add(commandPanel);
     }
     
     /**
@@ -207,61 +268,197 @@ public class ChatRow extends JBPanel<ChatRow> {
         textArea.setForeground(JBColor.RED);
         textArea.setBorder(JBUI.Borders.empty());
         
-        contentPanel.add(textArea, BorderLayout.CENTER);
+        contentPanel.add(textArea);
     }
     
     /**
      * Adds text content to the content panel.
      */
     private void addTextContent() {
-        // TODO: Implement markdown rendering
-        JTextArea textArea = new JTextArea(message.getContent());
-        textArea.setEditable(false);
-        textArea.setWrapStyleWord(true);
-        textArea.setLineWrap(true);
-        textArea.setOpaque(false);
-        textArea.setBorder(JBUI.Borders.empty());
+        String content = message.getContent();
         
-        contentPanel.add(textArea, BorderLayout.CENTER);
+        // Process the content to extract code blocks and images
+        processContent(content);
+    }
+    
+    /**
+     * Processes the content to extract code blocks and images.
+     *
+     * @param content The content to process
+     */
+    private void processContent(String content) {
+        // Create a text pane for the markdown content
+        JTextPane textPane = new JTextPane();
+        textPane.setEditable(false);
+        textPane.setOpaque(false);
+        
+        // Find all code blocks
+        Matcher codeBlockMatcher = CODE_BLOCK_PATTERN.matcher(content);
+        StringBuffer processedContent = new StringBuffer();
+        
+        while (codeBlockMatcher.find()) {
+            String language = codeBlockMatcher.group(1);
+            String code = codeBlockMatcher.group(2);
+            
+            // Replace the code block with a placeholder
+            codeBlockMatcher.appendReplacement(processedContent, "");
+            
+            // Add the content before the code block
+            if (processedContent.length() > 0) {
+                JTextPane contentPane = new JTextPane();
+                contentPane.setEditable(false);
+                contentPane.setOpaque(false);
+                markdownRenderer.render(processedContent.toString(), contentPane);
+                contentPanel.add(contentPane);
+                processedContent.setLength(0);
+            }
+            
+            // Add the code block
+            JComponent codeComponent = codeBlockRenderer.createCodeComponent(code, language);
+            JPanel codePanel = new JPanel(new BorderLayout());
+            codePanel.setBorder(JBUI.Borders.empty(5, 0));
+            codePanel.add(codeComponent, BorderLayout.CENTER);
+            contentPanel.add(codePanel);
+        }
+        
+        // Add any remaining content
+        codeBlockMatcher.appendTail(processedContent);
+        
+        // Process images in the remaining content
+        Matcher imageMatcher = IMAGE_PATTERN.matcher(processedContent.toString());
+        StringBuffer contentWithoutImages = new StringBuffer();
+        
+        while (imageMatcher.find()) {
+            String altText = imageMatcher.group(1);
+            String imageUrl = imageMatcher.group(2);
+            
+            // Replace the image with a placeholder
+            imageMatcher.appendReplacement(contentWithoutImages, "");
+            
+            // Add the content before the image
+            if (contentWithoutImages.length() > 0) {
+                JTextPane contentPane = new JTextPane();
+                contentPane.setEditable(false);
+                contentPane.setOpaque(false);
+                markdownRenderer.render(contentWithoutImages.toString(), contentPane);
+                contentPanel.add(contentPane);
+                contentWithoutImages.setLength(0);
+            }
+            
+            // Add the image
+            JComponent imageComponent = ImageRenderer.createImageComponent(imageUrl);
+            if (imageComponent != null) {
+                JPanel imagePanel = new JPanel(new BorderLayout());
+                imagePanel.setBorder(JBUI.Borders.empty(5, 0));
+                imagePanel.add(imageComponent, BorderLayout.CENTER);
+                contentPanel.add(imagePanel);
+            }
+        }
+        
+        // Add any remaining content
+        imageMatcher.appendTail(contentWithoutImages);
+        
+        // Render the remaining content as markdown
+        if (contentWithoutImages.length() > 0) {
+            JTextPane contentPane = new JTextPane();
+            contentPane.setEditable(false);
+            contentPane.setOpaque(false);
+            markdownRenderer.render(contentWithoutImages.toString(), contentPane);
+            contentPanel.add(contentPane);
+        }
     }
     
     /**
      * Adds user content to the content panel.
      */
     private void addUserContent() {
-        JPanel userPanel = new JPanel(new BorderLayout());
+        JPanel userPanel = new JPanel();
+        userPanel.setLayout(new BoxLayout(userPanel, BoxLayout.Y_AXIS));
         userPanel.setOpaque(true);
         userPanel.setBackground(JBColor.namedColor("Badge.backgroundColor", new JBColor(0x3D6185, 0x3D5A80)));
         userPanel.setBorder(JBUI.Borders.empty(9));
         
-        JTextArea textArea = new JTextArea(message.getContent());
-        textArea.setEditable(false);
-        textArea.setWrapStyleWord(true);
-        textArea.setLineWrap(true);
-        textArea.setOpaque(false);
-        textArea.setForeground(JBColor.namedColor("Badge.foregroundColor", JBColor.WHITE));
-        textArea.setBorder(JBUI.Borders.empty());
+        // Process the content to extract images
+        String content = message.getContent();
+        Matcher imageMatcher = IMAGE_PATTERN.matcher(content);
+        StringBuffer contentWithoutImages = new StringBuffer();
         
-        userPanel.add(textArea, BorderLayout.CENTER);
+        while (imageMatcher.find()) {
+            String altText = imageMatcher.group(1);
+            String imageUrl = imageMatcher.group(2);
+            
+            // Replace the image with a placeholder
+            imageMatcher.appendReplacement(contentWithoutImages, "");
+            
+            // Add the content before the image
+            if (contentWithoutImages.length() > 0) {
+                JTextArea textArea = new JTextArea(contentWithoutImages.toString());
+                textArea.setEditable(false);
+                textArea.setWrapStyleWord(true);
+                textArea.setLineWrap(true);
+                textArea.setOpaque(false);
+                textArea.setForeground(JBColor.namedColor("Badge.foregroundColor", JBColor.WHITE));
+                textArea.setBorder(JBUI.Borders.empty());
+                userPanel.add(textArea);
+                contentWithoutImages.setLength(0);
+            }
+            
+            // Add the image
+            JComponent imageComponent = ImageRenderer.createImageComponent(imageUrl);
+            if (imageComponent != null) {
+                JPanel imagePanel = new JPanel(new BorderLayout());
+                imagePanel.setOpaque(false);
+                imagePanel.setBorder(JBUI.Borders.empty(5, 0));
+                imagePanel.add(imageComponent, BorderLayout.CENTER);
+                userPanel.add(imagePanel);
+            }
+        }
         
-        // TODO: Add support for images
+        // Add any remaining content
+        imageMatcher.appendTail(contentWithoutImages);
         
-        contentPanel.add(userPanel, BorderLayout.CENTER);
+        if (contentWithoutImages.length() > 0) {
+            JTextArea textArea = new JTextArea(contentWithoutImages.toString());
+            textArea.setEditable(false);
+            textArea.setWrapStyleWord(true);
+            textArea.setLineWrap(true);
+            textArea.setOpaque(false);
+            textArea.setForeground(JBColor.namedColor("Badge.foregroundColor", JBColor.WHITE));
+            textArea.setBorder(JBUI.Borders.empty());
+            userPanel.add(textArea);
+        }
+        
+        contentPanel.add(userPanel);
     }
     
     /**
      * Adds tool result content to the content panel.
      */
     private void addToolResultContent() {
-        // TODO: Implement tool result content
-        JTextArea textArea = new JTextArea("Tool result content: " + message.getContent());
-        textArea.setEditable(false);
-        textArea.setWrapStyleWord(true);
-        textArea.setLineWrap(true);
-        textArea.setOpaque(false);
-        textArea.setBorder(JBUI.Borders.empty());
+        String content = message.getContent();
         
-        contentPanel.add(textArea, BorderLayout.CENTER);
+        // Create a panel for the tool result content
+        JPanel toolResultPanel = new JPanel(new BorderLayout());
+        toolResultPanel.setOpaque(true);
+        toolResultPanel.setBackground(JBColor.namedColor("ToolWindow.background", JBColor.background().brighter()));
+        toolResultPanel.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(JBColor.border()),
+                JBUI.Borders.empty(10)
+        ));
+        
+        // Create a text pane for the content
+        JTextPane textPane = new JTextPane();
+        textPane.setEditable(false);
+        textPane.setOpaque(false);
+        
+        // Render the content as markdown
+        markdownRenderer.render(content, textPane);
+        
+        // Add the text pane to the tool result panel
+        toolResultPanel.add(textPane, BorderLayout.CENTER);
+        
+        // Add the tool result panel to the content panel
+        contentPanel.add(toolResultPanel);
     }
     
     /**
@@ -283,7 +480,6 @@ public class ChatRow extends JBPanel<ChatRow> {
      * @return Whether the message is expandable
      */
     private boolean isExpandable() {
-        // TODO: Implement expandable check based on message type
         return message.isToolUse() || message.isCommand();
     }
 }

@@ -2,10 +2,7 @@ package com.cline;
 
 import com.cline.core.tool.ToolExecutor;
 import com.cline.core.tool.ToolRegistry;
-import com.cline.services.ClineApiService;
-import com.cline.services.ClineFileService;
-import com.cline.services.ClineSettingsService;
-import com.cline.services.ClineTerminalService;
+import com.cline.services.*;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.startup.StartupActivity;
@@ -42,6 +39,9 @@ public class ClinePlugin implements StartupActivity {
             
             ClineTerminalService terminalService = ClineTerminalService.getInstance(project);
             LOG.info("Terminal service initialized");
+            
+            ClineBrowserService browserService = ClineBrowserService.getInstance(project);
+            LOG.info("Browser service initialized");
             
             // Initialize tool registry and executor
             ToolRegistry toolRegistry = ToolRegistry.getInstance(project);
