@@ -89,7 +89,7 @@ public class AttemptCompletionTool extends AbstractTool {
             return "Parameter 'command' must be a string";
         }
         
-        return null;
+        return "";
     }
     
     @Override
@@ -111,7 +111,7 @@ public class AttemptCompletionTool extends AbstractTool {
             
             // Execute the command if provided
             if (command != null && !command.isEmpty()) {
-                terminalService.executeCommand(command)
+                terminalService.executeCommandAndCaptureOutput(command, 30)
                         .thenAccept(output -> {
                             // Create a result object
                             JsonObject resultObj = new JsonObject();

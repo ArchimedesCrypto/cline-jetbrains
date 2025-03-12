@@ -108,7 +108,7 @@ public class SearchFilesTool extends AbstractTool {
             return "Parameter 'file_pattern' must be a string";
         }
         
-        return null;
+        return "";
     }
     
     @Override
@@ -129,13 +129,30 @@ public class SearchFilesTool extends AbstractTool {
                         JsonObject result = new JsonObject();
                         JsonArray matches = new JsonArray();
                         
-                        for (Map.Entry<String, List<String>> entry : results.entrySet()) {
+                        // Group results by file
+                        Map<String, List<ClineFileService.SearchResult>> resultsByFile = 
+                                results.stream()
+                                        .collect(java.util.stream.Collectors.groupingBy(
+                                                ClineFileService.SearchResult::getFilePath));
+                        
+                        // Add each file's matches to the result
+                        for (Map.Entry<String, List<ClineFileService.SearchResult>> entry : resultsByFile.entrySet()) {
                             JsonObject fileMatch = new JsonObject();
                             fileMatch.addProperty("file", entry.getKey());
                             
                             JsonArray fileMatches = new JsonArray();
-                            for (String match : entry.getValue()) {
-                                fileMatches.add(match);
+                            for (ClineFileService.SearchResult searchResult : entry.getValue()) {
+                                JsonObject matchObj = new JsonObject();
+                                matchObj.addProperty("line", searchResult.getLineNumber());
+                                matchObj.addProperty("text", searchResult.getLine());
+                                
+                                JsonArray contextArray = new JsonArray();
+                                for (String contextLine : searchResult.getContext()) {
+                                    contextArray.add(contextLine);
+                                }
+                                matchObj.add("context", contextArray);
+                                
+                                fileMatches.add(matchObj);
                             }
                             
                             fileMatch.add("matches", fileMatches);
@@ -143,7 +160,7 @@ public class SearchFilesTool extends AbstractTool {
                         }
                         
                         result.add("matches", matches);
-                        result.addProperty("count", matches.size());
+                        result.addProperty("count", results.size());
                         
                         // Complete the future with the result
                         completeSuccessfully(future, result);

@@ -75,7 +75,7 @@ public class ExecuteCommandTool extends AbstractTool {
             return "Parameter 'command' must be a string";
         }
         
-        return null;
+        return "";
     }
     
     @Override
@@ -88,7 +88,7 @@ public class ExecuteCommandTool extends AbstractTool {
             String command = args.get("command").getAsString();
             
             // Execute the command
-            terminalService.executeCommand(command)
+            terminalService.executeCommandAndCaptureOutput(command, 60)
                     .thenAccept(output -> {
                         // Create a result object
                         JsonObject result = new JsonObject();
