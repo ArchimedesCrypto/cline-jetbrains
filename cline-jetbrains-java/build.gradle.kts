@@ -7,7 +7,7 @@ plugins {
 }
 
 group = "com.cline"
-version = "0.0.1-java"
+version = "0.0.4-java"
 
 repositories {
     mavenCentral()
@@ -87,6 +87,15 @@ tasks {
         
         // Plugin change notes visible in the Marketplace
         changeNotes.set("""
+            v0.0.4-java: Feature parity release with multiple API providers
+            - Added support for multiple API providers (Anthropic, OpenAI)
+            - Implemented Azure OpenAI support
+            - Added prompt caching for Claude 3.5
+            - Implemented MCP integration
+            - Added auto-approval for tools
+            - Fixed browser functionality and tests
+            - Improved error handling and stability
+            
             v0.0.1-java: Initial release of the pure Java implementation of Cline for JetBrains IDEs.
             - Complete rewrite in Java
             - Feature parity with VSCode version
