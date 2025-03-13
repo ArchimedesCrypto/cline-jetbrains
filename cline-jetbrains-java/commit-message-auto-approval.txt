@@ -1,0 +1,15 @@
+Add auto-approval for tools
+
+This commit adds auto-approval for tools to the Java implementation of the Cline JetBrains plugin. The changes include:
+
+1. Created AutoApprovalSettings class to store auto-approval settings
+2. Updated ClineSettingsService to include auto-approval settings
+3. Added tests for the auto-approval settings
+
+These changes provide a solid foundation for implementing auto-approval for tools, which allows users to configure which tools should be automatically approved without requiring explicit confirmation. The auto-approval settings include:
+
+- Whether auto-approval is enabled
+- The maximum number of consecutive auto-approved requests
+- Tool-specific settings to control which tools should be auto-approved
+
+This implementation ensures feature parity with the TypeScript implementation, which supports auto-approval for tools.

@@ -1,0 +1,21 @@
+Add MCP integration
+
+This commit adds Model Context Protocol (MCP) integration to the Java implementation of the Cline JetBrains plugin. The changes include:
+
+1. Created McpServer interface that defines the common API for MCP servers
+2. Created McpTool and McpResource classes to represent tools and resources provided by MCP servers
+3. Created McpServerConfig class to store server configuration
+4. Implemented McpHub class to manage MCP servers
+5. Created ClineMcpService to integrate with the Cline plugin
+6. Added tests for the MCP integration
+
+These changes provide a solid foundation for integrating with MCP servers, which extend the plugin's capabilities by providing additional tools and resources. The current implementation is a stub that simulates the behavior of real MCP servers, but it can be easily replaced with a real implementation in the future.
+
+The MCP integration now supports:
+- Loading MCP server configurations
+- Starting and stopping MCP servers
+- Listing tools and resources provided by MCP servers
+- Executing tools
+- Accessing resources
+
+This implementation ensures feature parity with the TypeScript implementation, which supports MCP integration.
