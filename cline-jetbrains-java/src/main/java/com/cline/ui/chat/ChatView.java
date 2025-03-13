@@ -6,6 +6,7 @@ import com.cline.core.model.MessageRole;
 import com.cline.core.tool.ToolExecutor;
 import com.cline.services.ClineApiService;
 import com.cline.services.ClineSettingsService;
+import com.cline.services.api.ApiProvider;
 import com.google.gson.JsonObject;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
@@ -268,7 +269,7 @@ public class ChatView extends JPanel {
         StringBuilder contentBuilder = new StringBuilder();
         
         // Send the conversation to the API with streaming
-        apiService.sendConversationStreaming(conversation, new ClineApiService.StreamHandler() {
+        apiService.sendConversationStreaming(conversation, new ApiProvider.StreamHandler() {
             @Override
             public void onTextChunk(String text) {
                 // Append the text chunk to the content builder

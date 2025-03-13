@@ -155,7 +155,7 @@ public class BrowserActionTool extends AbstractTool {
                                 JsonObject result = new JsonObject();
                                 result.addProperty("action", action);
                                 result.addProperty("url", url);
-                                result.addProperty("screenshot", screenshot);
+                                result.addProperty("screenshot", screenshot.getScreenshot());
                                 result.addProperty("success", true);
                                 
                                 // Complete the future with the result
@@ -175,7 +175,7 @@ public class BrowserActionTool extends AbstractTool {
                                 JsonObject result = new JsonObject();
                                 result.addProperty("action", action);
                                 result.addProperty("coordinate", coordinate);
-                                result.addProperty("screenshot", screenshot);
+                                result.addProperty("screenshot", screenshot.getScreenshot());
                                 result.addProperty("success", true);
                                 
                                 // Complete the future with the result
@@ -195,7 +195,7 @@ public class BrowserActionTool extends AbstractTool {
                                 JsonObject result = new JsonObject();
                                 result.addProperty("action", action);
                                 result.addProperty("text", text);
-                                result.addProperty("screenshot", screenshot);
+                                result.addProperty("screenshot", screenshot.getScreenshot());
                                 result.addProperty("success", true);
                                 
                                 // Complete the future with the result
@@ -213,7 +213,7 @@ public class BrowserActionTool extends AbstractTool {
                                 // Create a result object
                                 JsonObject result = new JsonObject();
                                 result.addProperty("action", action);
-                                result.addProperty("screenshot", screenshot);
+                                result.addProperty("screenshot", screenshot.getScreenshot());
                                 result.addProperty("success", true);
                                 
                                 // Complete the future with the result
@@ -231,7 +231,7 @@ public class BrowserActionTool extends AbstractTool {
                                 // Create a result object
                                 JsonObject result = new JsonObject();
                                 result.addProperty("action", action);
-                                result.addProperty("screenshot", screenshot);
+                                result.addProperty("screenshot", screenshot.getScreenshot());
                                 result.addProperty("success", true);
                                 
                                 // Complete the future with the result

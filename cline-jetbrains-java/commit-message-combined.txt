@@ -1,0 +1,31 @@
+Implement feature parity for Java implementation
+
+This commit adds several key features to ensure feature parity between the Java and TypeScript implementations of the Cline JetBrains plugin:
+
+1. API Provider Abstraction Layer:
+   - Created ApiProvider interface defining the common API for all providers
+   - Created ModelInfo class to store model information
+   - Implemented AnthropicProvider with prompt caching support for Claude 3.5 models
+   - Implemented OpenAiProvider with support for both OpenAI and Azure OpenAI endpoints
+   - Updated ClineApiService to use the provider abstraction
+   - Updated ClineSettingsService to include provider settings
+
+2. Browser Functionality:
+   - Created BrowserSession interface defining the common API for browser sessions
+   - Created BrowserSettings class to store browser-related settings
+   - Implemented JxBrowserSession as a foundation for browser functionality
+   - Updated ClineBrowserService to use the BrowserSession interface
+   - Updated ClineSettingsService to include browser settings
+
+3. MCP Integration:
+   - Created McpServer interface defining the common API for MCP servers
+   - Created McpTool and McpResource classes to represent tools and resources
+   - Created McpServerConfig class to store server configuration
+   - Implemented McpHub class to manage MCP servers
+   - Created ClineMcpService to integrate with the Cline plugin
+
+4. Auto-approval for Tools:
+   - Created AutoApprovalSettings class to store auto-approval settings
+   - Updated ClineSettingsService to include auto-approval settings
+
+These changes provide a solid foundation for the Java implementation of the Cline JetBrains plugin, ensuring feature parity with the TypeScript implementation.

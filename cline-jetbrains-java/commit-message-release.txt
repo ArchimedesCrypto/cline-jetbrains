@@ -1,0 +1,40 @@
+release: Cline JetBrains Java Implementation v0.0.4
+
+This release adds several major features to achieve feature parity with the TypeScript implementation:
+
+1. Multiple API Providers
+   - Added support for both Anthropic (Claude) and OpenAI models
+   - Implemented ApiProvider interface for abstracting API communication
+   - Created AnthropicProvider for Claude models
+   - Created OpenAiProvider for OpenAI models
+   - Added support for Azure OpenAI endpoints
+
+2. Prompt Caching
+   - Implemented prompt caching for Claude 3.5
+   - Added cache control headers to API requests
+   - Improved performance for repeated requests
+
+3. MCP Integration
+   - Added support for Model Context Protocol servers
+   - Implemented McpServer interface for MCP servers
+   - Created McpTool and McpResource classes
+   - Added ClineMcpService for managing MCP servers
+   - Implemented MCP tool and resource access functionality
+
+4. Auto-approval for Tools
+   - Added AutoApprovalSettings for tool auto-approval
+   - Implemented tool-specific auto-approval configuration
+   - Added settings UI for configuring auto-approval
+
+5. Enhanced Browser Functionality
+   - Implemented BrowserSession interface for browser sessions
+   - Created JxBrowserSession implementation using JxBrowser
+   - Added support for screenshot capture and console log capture
+   - Improved browser settings configuration
+
+6. Documentation
+   - Updated README with information about new features
+   - Added RELEASE_NOTES.md with detailed release information
+   - Improved code comments and JavaDoc
+
+This release represents a significant milestone in the Java implementation, achieving full feature parity with the TypeScript version.
