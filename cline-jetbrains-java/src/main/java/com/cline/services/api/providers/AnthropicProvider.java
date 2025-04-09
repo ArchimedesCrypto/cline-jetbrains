@@ -219,24 +219,62 @@ public class AnthropicProvider implements ApiProvider {
             @Override
             public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
                 if (!response.isSuccessful()) {
-                    streamHandler.onError(new IOException("Unexpected response: " + response));
+                    streamHandler.onError(new IOException("Unexpected response: " + response + " Body: " + response.body().string()));
                     return;
                 }
-                
+
                 ResponseBody responseBody = response.body();
                 if (responseBody == null) {
                     streamHandler.onError(new IOException("Empty response body"));
                     return;
                 }
-                
-                try {
-                    // In a real implementation, we would parse the streaming response line by line
-                    // This is a simplified implementation for now
-                    String responseText = responseBody.string();
-                    streamHandler.onTextChunk(responseText);
-                    streamHandler.onComplete();
+
+                try (ResponseBody body = responseBody) {
+                    String line;
+                    int inputTokens = 0;
+                    int outputTokens = 0;
+                    while ((line = body.source().readUtf8Line()) != null) {
+                        if (line.startsWith("event: ")) {
+                            String eventType = line.substring(7);
+                            // Read the next line which should be data
+                            line = body.source().readUtf8Line();
+                            if (line != null && line.startsWith("data: ")) {
+                                String dataJson = line.substring(6);
+                                try {
+                                    JsonObject data = JsonParser.parseString(dataJson).getAsJsonObject();
+                                    switch (eventType) {
+                                        case "message_start":
+                                            if (data.has("message") && data.getAsJsonObject("message").has("usage")) {
+                                                JsonObject usage = data.getAsJsonObject("message").getAsJsonObject("usage");
+                                                inputTokens = usage.get("input_tokens").getAsInt();
+                                            }
+                                            break;
+                                        case "content_block_delta":
+                                            if (data.has("delta") && data.getAsJsonObject("delta").has("text")) {
+                                                streamHandler.onTextChunk(data.getAsJsonObject("delta").get("text").getAsString());
+                                            }
+                                            break;
+                                        case "message_delta":
+                                            if (data.has("usage")) {
+                                                outputTokens = data.getAsJsonObject("usage").get("output_tokens").getAsInt();
+                                            }
+                                            break;
+                                        case "message_stop":
+                                            streamHandler.onUsage(inputTokens, outputTokens);
+                                            streamHandler.onComplete();
+                                            return; // Stop processing after message_stop
+                                    }
+                                    // TODO: Handle tool use events (content_block_start, content_block_stop)
+                                } catch (JsonSyntaxException e) {
+                                    streamHandler.onError(new IOException("Error parsing stream data: " + dataJson, e));
+                                }
+                            }
+                        }
+                    }
+                } catch (IOException e) {
+                    streamHandler.onError(e);
                 } finally {
-                    responseBody.close();
+                    streamHandler.onComplete(); // Ensure complete is called even on error or unexpected end
                 }
             }
         });
@@ -246,7 +284,10 @@ public class AnthropicProvider implements ApiProvider {
     public CompletableFuture<Message> sendConversation(Conversation conversation) {
         CompletableFuture<Message> future = new CompletableFuture<>();
         StringBuilder responseBuilder = new StringBuilder();
-        
+        final int[] inputTokens = {0};
+        final int[] outputTokens = {0};
+        final JsonObject[] toolCall = {null}; // Placeholder for tool call info
+
         sendConversationStreaming(conversation, new StreamHandler() {
             @Override
             public void onTextChunk(String text) {
@@ -255,18 +296,33 @@ public class AnthropicProvider implements ApiProvider {
 
             @Override
             public void onToolUse(String toolName, JsonObject toolInput) {
-                // Not implemented in this simplified version
+                // TODO: Handle tool use properly if needed in non-streaming
+                toolCall[0] = new JsonObject();
+                toolCall[0].addProperty("name", toolName);
+                toolCall[0].add("input", toolInput);
             }
 
             @Override
-            public void onUsage(int inputTokens, int outputTokens) {
-                // Not implemented in this simplified version
+            public void onUsage(int inTokens, int outTokens) {
+                inputTokens[0] = inTokens;
+                outputTokens[0] = outTokens;
             }
 
             @Override
             public void onComplete() {
                 String content = responseBuilder.toString();
                 Message message = Message.createAssistantMessage(content);
+
+                // Add usage metadata
+                JsonObject metadata = new JsonObject();
+                metadata.addProperty("inputTokens", inputTokens[0]);
+                metadata.addProperty("outputTokens", outputTokens[0]);
+                // TODO: Calculate and add cost based on model pricing
+                // metadata.addProperty("cost", calculateCost(inputTokens[0], outputTokens[0]));
+                message.setMetadata(metadata);
+
+                // TODO: Set tool call info on message metadata if toolCall[0] is not null
+
                 future.complete(message);
             }
 
@@ -275,7 +331,7 @@ public class AnthropicProvider implements ApiProvider {
                 future.completeExceptionally(error);
             }
         });
-        
+
         return future;
     }
 

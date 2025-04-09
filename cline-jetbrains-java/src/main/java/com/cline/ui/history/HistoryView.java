@@ -10,6 +10,8 @@ import com.intellij.util.ui.JBUI;
 
 import javax.swing.*;
 import java.awt.*;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
@@ -27,6 +29,7 @@ public class HistoryView extends JPanel {
     
     private JBList<Conversation> conversationList;
     private DefaultListModel<Conversation> listModel;
+    private JTextPane previewPane;
     
     private Consumer<Conversation> onSelectConversation;
     
@@ -58,8 +61,11 @@ public class HistoryView extends JPanel {
         conversationList.addListSelectionListener(e -> {
             if (!e.getValueIsAdjusting()) {
                 Conversation selected = conversationList.getSelectedValue();
-                if (selected != null && onSelectConversation != null) {
-                    onSelectConversation.accept(selected);
+                if (selected != null) {
+                    updatePreview(selected);
+                    if (onSelectConversation != null) {
+                        onSelectConversation.accept(selected);
+                    }
                 }
             }
         });
@@ -72,18 +78,76 @@ public class HistoryView extends JPanel {
         JPanel headerPanel = new JPanel(new BorderLayout());
         headerPanel.setBorder(JBUI.Borders.emptyBottom(10));
         
-        JLabel titleLabel = new JLabel("Conversation History");
+        JLabel titleLabel = new JLabel("History"); // Shorter title
         titleLabel.setFont(titleLabel.getFont().deriveFont(Font.BOLD, 16f));
         
         JButton clearButton = new JButton("Clear History");
         clearButton.addActionListener(e -> clearHistory());
         
-        headerPanel.add(titleLabel, BorderLayout.WEST);
+        JTextField searchField = new JTextField(20);
+        searchField.putClientProperty("JTextField.variant", "search"); // Use search field style
+        searchField.getDocument().addDocumentListener(new DocumentListener() {
+            @Override public void insertUpdate(DocumentEvent e) { filterList(); }
+            @Override public void removeUpdate(DocumentEvent e) { filterList(); }
+            @Override public void changedUpdate(DocumentEvent e) { filterList(); }
+
+            private void filterList() {
+                String filterText = searchField.getText().toLowerCase();
+                List<Conversation> allConversations = historyService.getConversations();
+                List<Conversation> filtered = allConversations.stream()
+                        .filter(conv -> conversationMatches(conv, filterText))
+                        .toList();
+                updateList(filtered);
+            }
+        
+            /**
+             * Checks if a conversation matches the filter text.
+             *
+             * @param conversation The conversation
+             * @param filterText   The filter text (lowercase)
+             * @return True if matches, false otherwise
+             */
+            private boolean conversationMatches(Conversation conversation, String filterText) {
+                if (filterText.isEmpty()) {
+                    return true;
+                }
+                // Check title
+                String title = conversation.getTitle();
+                if (title != null && title.toLowerCase().contains(filterText)) {
+                    return true;
+                }
+                // Check message content
+                for (Message message : conversation.getMessages()) {
+                    if (message.getContent() != null && message.getContent().toLowerCase().contains(filterText)) {
+                        return true;
+                    }
+                }
+                return false;
+            }
+        });
+
+        JPanel leftPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 5, 0));
+        leftPanel.add(titleLabel);
+        leftPanel.add(searchField);
+
+        headerPanel.add(leftPanel, BorderLayout.WEST);
         headerPanel.add(clearButton, BorderLayout.EAST);
         
         // Add components to main panel
+        // Create preview pane
+        previewPane = new JTextPane();
+        previewPane.setEditable(false);
+        previewPane.setBorder(JBUI.Borders.empty(5));
+        JBScrollPane previewScrollPane = new JBScrollPane(previewPane);
+        previewScrollPane.setBorder(JBUI.Borders.customLine(JBColor.border(), 1, 0, 0, 0));
+
+        // Create split pane
+        JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, scrollPane, previewScrollPane);
+        splitPane.setDividerLocation(200);
+        splitPane.setResizeWeight(0.3);
+
         add(headerPanel, BorderLayout.NORTH);
-        add(scrollPane, BorderLayout.CENTER);
+        add(splitPane, BorderLayout.CENTER);
     }
     
     /**
@@ -92,6 +156,22 @@ public class HistoryView extends JPanel {
     private void loadConversations() {
         List<Conversation> conversations = historyService.getConversations();
         updateList(conversations);
+    }
+
+    /**
+     * Updates the preview pane with the selected conversation.
+     *
+     * @param conversation The selected conversation
+     */
+    private void updatePreview(Conversation conversation) {
+        StringBuilder previewText = new StringBuilder();
+        for (Message message : conversation.getMessages()) {
+            previewText.append("<b>").append(message.getRole()).append(":</b><br>");
+            previewText.append(message.getContent().replace("\n", "<br>")).append("<br><br>");
+        }
+        previewPane.setContentType("text/html");
+        previewPane.setText("<html>" + previewText.toString() + "</html>");
+        previewPane.setCaretPosition(0);
     }
     
     /**

@@ -57,63 +57,29 @@ public class ToolTestView extends JPanel {
      * Creates the UI components.
      */
     private void createUIComponents() {
-        // Tool selection
-        JPanel toolSelectionPanel = new JPanel(new BorderLayout());
-        toolSelectionPanel.setBorder(JBUI.Borders.emptyBottom(10));
-        
-        JBLabel toolLabel = new JBLabel("Select Tool:");
         toolComboBox = new JComboBox<>();
-        
-        // Add available tools to combo box
         toolRegistry.getAllTools().forEach(tool -> toolComboBox.addItem(tool.getName()));
-        
-        toolSelectionPanel.add(toolLabel, BorderLayout.WEST);
-        toolSelectionPanel.add(toolComboBox, BorderLayout.CENTER);
-        
-        // Arguments input
-        JPanel argsPanel = new JPanel(new BorderLayout());
-        argsPanel.setBorder(JBUI.Borders.emptyBottom(10));
-        
-        JBLabel argsLabel = new JBLabel("Arguments (JSON):");
+
         argsArea = new JTextArea(5, 20);
         argsArea.setText("{\n  \"path\": \"example/file.txt\"\n}");
         JBScrollPane argsScrollPane = new JBScrollPane(argsArea);
-        
-        argsPanel.add(argsLabel, BorderLayout.NORTH);
-        argsPanel.add(argsScrollPane, BorderLayout.CENTER);
-        
-        // Output area
-        JPanel outputPanel = new JPanel(new BorderLayout());
-        outputPanel.setBorder(JBUI.Borders.emptyTop(10));
-        
-        JBLabel outputLabel = new JBLabel("Output:");
+
         outputArea = new JTextArea(10, 20);
         outputArea.setEditable(false);
         JBScrollPane outputScrollPane = new JBScrollPane(outputArea);
-        
-        outputPanel.add(outputLabel, BorderLayout.NORTH);
-        outputPanel.add(outputScrollPane, BorderLayout.CENTER);
-        
-        // Execute button
+
         JButton executeButton = new JButton("Execute Tool");
-        executeButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                executeTool();
-            }
-        });
-        
-        // Layout
-        JPanel topPanel = new JPanel(new BorderLayout());
-        topPanel.add(toolSelectionPanel, BorderLayout.NORTH);
-        topPanel.add(argsPanel, BorderLayout.CENTER);
-        
-        JPanel centerPanel = new JPanel(new BorderLayout());
-        centerPanel.add(topPanel, BorderLayout.NORTH);
-        centerPanel.add(executeButton, BorderLayout.CENTER);
-        centerPanel.add(outputPanel, BorderLayout.SOUTH);
-        
-        add(centerPanel, BorderLayout.CENTER);
+        executeButton.addActionListener(e -> executeTool());
+
+        JPanel formPanel = FormBuilder.createFormBuilder()
+                .addLabeledComponent("Select Tool:", toolComboBox)
+                .addLabeledComponent("Arguments (JSON):", argsScrollPane)
+                .addComponent(executeButton)
+                .addLabeledComponent("Output:", outputScrollPane)
+                .addComponentFillVertically(new JPanel(), 0)
+                .getPanel();
+
+        add(formPanel, BorderLayout.CENTER);
         
         // Update args area when tool selection changes
         toolComboBox.addActionListener(new ActionListener() {

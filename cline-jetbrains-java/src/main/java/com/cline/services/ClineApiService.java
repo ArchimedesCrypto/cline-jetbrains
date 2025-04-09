@@ -137,7 +137,13 @@ public final class ClineApiService {
      * @param streamHandler The stream handler for receiving chunks
      */
     public void sendConversationStreaming(Conversation conversation, ApiProvider.StreamHandler streamHandler) {
-        getApiProvider().sendConversationStreaming(conversation, streamHandler);
+        // TODO: Implement retry logic for streaming
+        try {
+            getApiProvider().sendConversationStreaming(conversation, streamHandler);
+        } catch (Exception e) {
+            logError("Error sending streaming conversation", e);
+            streamHandler.onError(e);
+        }
     }
 
     /**
@@ -147,7 +153,23 @@ public final class ClineApiService {
      * @return A CompletableFuture containing the AI response
      */
     public CompletableFuture<Message> sendConversation(Conversation conversation) {
-        return getApiProvider().sendConversation(conversation);
+        // TODO: Implement retry logic
+        return getApiProvider().sendConversation(conversation)
+                .exceptionally(e -> {
+                    logError("Error sending conversation", e);
+                    // Create an error message
+                    JsonObject metadata = new JsonObject();
+                    metadata.addProperty("error", true);
+                    return new Message(
+                            null,
+                            "Error: " + e.getMessage(),
+                            com.cline.core.model.MessageRole.ASSISTANT,
+                            null,
+                            metadata,
+                            null,
+                            null
+                    );
+                });
     }
 
     /**

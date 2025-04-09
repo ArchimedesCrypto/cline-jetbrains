@@ -2,6 +2,7 @@ package com.cline.core.tool;
 
 import com.cline.core.model.Conversation;
 import com.cline.core.model.Message;
+import com.cline.services.ClineSettingsService;
 import com.cline.services.ClineApiService;
 import com.google.gson.JsonObject;
 import com.intellij.openapi.components.Service;
@@ -96,12 +97,25 @@ public final class ToolExecutor {
             return CompletableFuture.completedFuture(ToolResult.failure(errorMessage));
         }
 
-        try {
-            return tool.execute(args);
-        } catch (Exception e) {
-            LOG.error("Error executing tool: " + toolName, e);
+        // Check for auto-approval
+        ClineSettingsService settingsService = ClineSettingsService.getInstance();
+        if (settingsService.isAutoApproveEnabled() && settingsService.isToolAutoApproved(toolName)) {
+            LOG.info("Auto-approving tool: " + toolName);
+            try {
+                return tool.execute(args);
+            } catch (Exception e) {
+                LOG.error("Error executing tool: " + toolName, e);
+                return CompletableFuture.completedFuture(
+                        ToolResult.failure("Error executing tool: " + e.getMessage())
+                );
+            }
+        } else {
+            // Tool requires manual approval
+            // This should be handled by the UI (ChatView) before calling executeTool directly
+            // For now, we return a failure indicating approval is needed
+            LOG.warn("Tool requires manual approval: " + toolName);
             return CompletableFuture.completedFuture(
-                    ToolResult.failure("Error executing tool: " + e.getMessage())
+                    ToolResult.failure("Tool requires manual approval: " + toolName)
             );
         }
     }

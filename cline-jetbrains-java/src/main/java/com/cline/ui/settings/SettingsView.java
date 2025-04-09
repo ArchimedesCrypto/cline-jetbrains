@@ -60,14 +60,18 @@ public class SettingsView extends JPanel {
         // Create API settings panel
         JPanel apiPanel = createApiPanel();
         tabbedPane.addTab("API", apiPanel);
-        
-        // Create general settings panel
-        JPanel generalPanel = createGeneralPanel();
-        tabbedPane.addTab("General", generalPanel);
-        
-        // Create appearance settings panel
-        JPanel appearancePanel = createAppearancePanel();
-        tabbedPane.addTab("Appearance", appearancePanel);
+
+        // Create Chat settings panel
+        JPanel chatPanel = createChatPanel();
+        tabbedPane.addTab("Chat", chatPanel);
+
+        // Create Browser settings panel
+        JPanel browserPanel = createBrowserPanel();
+        tabbedPane.addTab("Browser", browserPanel);
+
+        // Create Auto-Approval settings panel
+        JPanel autoApprovalPanel = createAutoApprovalPanel();
+        tabbedPane.addTab("Auto-Approval", autoApprovalPanel);
         
         // Create buttons panel
         JPanel buttonsPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
@@ -92,104 +96,152 @@ public class SettingsView extends JPanel {
      * @return The API settings panel
      */
     private JPanel createApiPanel() {
-        JPanel panel = new JPanel(new BorderLayout());
-        panel.setBorder(JBUI.Borders.empty(10));
-        
-        // API provider
         apiProviderComboBox = new JComboBox<>(new String[]{"OpenAI", "Anthropic", "Custom"});
-        
-        // API key
         apiKeyField = new JBPasswordField();
-        
-        // Model
         modelComboBox = new JComboBox<>(new String[]{"gpt-4", "gpt-3.5-turbo", "claude-3-opus", "claude-3-sonnet"});
-        
-        // Create form
+
         JPanel formPanel = FormBuilder.createFormBuilder()
                 .addLabeledComponent("API Provider:", apiProviderComboBox)
                 .addLabeledComponent("API Key:", apiKeyField)
                 .addLabeledComponent("Model:", modelComboBox)
                 .addComponentFillVertically(new JPanel(), 0)
                 .getPanel();
-        
+
+        JPanel panel = new JPanel(new BorderLayout());
+        panel.setBorder(JBUI.Borders.empty(10));
         panel.add(formPanel, BorderLayout.CENTER);
-        
         return panel;
     }
     
+    private JSlider temperatureSlider;
+
     /**
-     * Creates the general settings panel.
+     * Creates the Chat settings panel.
      *
-     * @return The general settings panel
+     * @return The Chat settings panel
      */
-    private JPanel createGeneralPanel() {
-        JPanel panel = new JPanel(new BorderLayout());
-        panel.setBorder(JBUI.Borders.empty(10));
-        
-        // Auto-approve
-        autoApproveCheckBox = new JCheckBox("Auto-approve tool and command requests");
-        
-        // Max auto-approve requests
-        autoApproveMaxRequestsSpinner = new JSpinner(new SpinnerNumberModel(10, 1, 100, 1));
-        
-        // Create form
+    private JPanel createChatPanel() {
+        temperatureSlider = new JSlider(0, 100, 70); // 0.0 to 1.0, scaled by 100
+        temperatureSlider.setMajorTickSpacing(10);
+        temperatureSlider.setMinorTickSpacing(5);
+        temperatureSlider.setPaintTicks(true);
+        temperatureSlider.setPaintLabels(true);
+
         JPanel formPanel = FormBuilder.createFormBuilder()
-                .addComponent(autoApproveCheckBox)
-                .addLabeledComponent("Max auto-approve requests:", autoApproveMaxRequestsSpinner)
+                .addLabeledComponent("Temperature:", temperatureSlider)
                 .addComponentFillVertically(new JPanel(), 0)
                 .getPanel();
-        
-        panel.add(formPanel, BorderLayout.CENTER);
-        
-        return panel;
-    }
-    
-    /**
-     * Creates the appearance settings panel.
-     *
-     * @return The appearance settings panel
-     */
-    private JPanel createAppearancePanel() {
+
         JPanel panel = new JPanel(new BorderLayout());
         panel.setBorder(JBUI.Borders.empty(10));
-        
-        // TODO: Add appearance settings
-        
-        JBLabel placeholderLabel = new JBLabel("Appearance settings will be added in a future version.");
-        panel.add(placeholderLabel, BorderLayout.CENTER);
-        
+        panel.add(formPanel, BorderLayout.CENTER);
+        return panel;
+    }
+
+    /**
+     * Creates the Browser settings panel.
+     *
+     * @return The Browser settings panel
+     */
+    private JPanel createBrowserPanel() {
+        JPanel panel = new JPanel(new BorderLayout());
+        panel.setBorder(JBUI.Borders.empty(10));
+        panel.add(new JLabel("Browser Settings Placeholder"), BorderLayout.CENTER);
+        return panel;
+    }
+
+    private JCheckBox autoApproveCheckBox;
+    private JSpinner autoApproveMaxRequestsSpinner;
+
+    private JCheckBox autoApproveCheckBox;
+    private JSpinner autoApproveMaxRequestsSpinner;
+    private JList<String> toolApprovalList; // List for per-tool approval
+    private DefaultListModel<String> toolApprovalListModel;
+
+    /**
+     * Creates the Auto-Approval settings panel.
+     *
+     * @return The Auto-Approval settings panel
+     */
+    private JPanel createAutoApprovalPanel() {
+        autoApproveCheckBox = new JCheckBox("Enable Auto-Approval");
+        autoApproveMaxRequestsSpinner = new JSpinner(new SpinnerNumberModel(10, 1, 100, 1));
+
+        toolApprovalListModel = new DefaultListModel<>();
+        toolApprovalList = new JBList<>(toolApprovalListModel);
+        toolApprovalList.setCellRenderer(new CheckboxListCellRenderer());
+        toolApprovalList.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
+        // Add MouseListener to toggle checkbox on click
+        toolApprovalList.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                int index = toolApprovalList.locationToIndex(evt.getPoint());
+                if (index >= 0) {
+                    CheckedItem item = (CheckedItem) toolApprovalListModel.getElementAt(index);
+                    item.setSelected(!item.isSelected());
+                    toolApprovalList.repaint(toolApprovalList.getCellBounds(index, index));
+                }
+            }
+        });
+        // Load tools into list
+        loadToolApprovalList();
+
+        JPanel formPanel = FormBuilder.createFormBuilder()
+                .addComponent(autoApproveCheckBox)
+                .addLabeledComponent("Max Auto-Approved Requests per Task:", autoApproveMaxRequestsSpinner)
+                // .addLabeledComponent("Per-Tool Approval:", new JBScrollPane(toolApprovalList)) // Add list later
+                .addComponentFillVertically(new JPanel(), 0)
+                .getPanel();
+
+        JPanel panel = new JPanel(new BorderLayout());
+        panel.setBorder(JBUI.Borders.empty(10));
+        panel.add(formPanel, BorderLayout.CENTER);
         return panel;
     }
     
     /**
      * Loads settings from the settings service.
      */
+    private void loadToolApprovalList() {
+        toolApprovalListModel.clear();
+        // TODO: Get actual tool list from ToolRegistry
+        List<String> tools = List.of("read_file", "write_to_file", "apply_diff", "execute_command");
+        for (String toolName : tools) {
+            boolean isApproved = settingsService.isToolAutoApproved(toolName);
+            toolApprovalListModel.addElement(new CheckedItem(toolName, isApproved));
+        }
+    }
+
     private void loadSettings() {
-        // TODO: Load settings from the settings service
-        
-        // For now, we'll just set some default values
-        apiProviderComboBox.setSelectedItem("Anthropic");
-        apiKeyField.setText("sk-ant-api-key");
-        modelComboBox.setSelectedItem("claude-3-sonnet");
-        
-        autoApproveCheckBox.setSelected(false);
-        autoApproveMaxRequestsSpinner.setValue(10);
+        apiProviderComboBox.setSelectedItem(settingsService.getApiProvider());
+        apiKeyField.setText(settingsService.getApiKey());
+        modelComboBox.setSelectedItem(settingsService.getModel());
+        temperatureSlider.setValue((int)(settingsService.getTemperature() * 100));
+        autoApproveCheckBox.setSelected(settingsService.isAutoApproveEnabled());
+        autoApproveMaxRequestsSpinner.setValue(settingsService.getAutoApproveMaxRequests());
+        loadToolApprovalList(); // Load tool list state
     }
     
     /**
      * Saves settings to the settings service.
      */
     private void saveSettings() {
-        // TODO: Save settings to the settings service
-        
-        // For now, we'll just log the settings
-        LOG.info("Saving settings:");
-        LOG.info("API Provider: " + apiProviderComboBox.getSelectedItem());
-        LOG.info("API Key: " + apiKeyField.getText());
-        LOG.info("Model: " + modelComboBox.getSelectedItem());
-        LOG.info("Auto-approve: " + autoApproveCheckBox.isSelected());
-        LOG.info("Max auto-approve requests: " + autoApproveMaxRequestsSpinner.getValue());
-        
+        settingsService.setApiProvider((String) apiProviderComboBox.getSelectedItem());
+        settingsService.setApiKey(new String(apiKeyField.getPassword()));
+        settingsService.setModel((String) modelComboBox.getSelectedItem());
+        settingsService.setTemperature(temperatureSlider.getValue() / 100.0);
+        settingsService.setAutoApproveEnabled(autoApproveCheckBox.isSelected());
+        settingsService.setAutoApproveMaxRequests((Integer) autoApproveMaxRequestsSpinner.getValue());
+
+        // Save tool approval list state
+        java.util.List<String> approvedTools = new java.util.ArrayList<>();
+        for (int i = 0; i < toolApprovalListModel.getSize(); i++) {
+            CheckedItem item = (CheckedItem) toolApprovalListModel.getElementAt(i);
+            if (item.isSelected()) {
+                approvedTools.add(item.getLabel());
+            }
+        }
+        settingsService.setAutoApprovedTools(approvedTools);
+
         // Show success message
         JOptionPane.showMessageDialog(
                 this,

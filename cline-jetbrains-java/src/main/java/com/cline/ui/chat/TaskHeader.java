@@ -81,27 +81,35 @@ public class TaskHeader extends JPanel {
         JPanel metricsPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         metricsPanel.setOpaque(false);
         
-        // Add metrics like tokens in/out, cost, etc.
-        if (task.getMetadata() != null) {
-            if (task.getMetadata().has("inputTokens") && task.getMetadata().has("outputTokens")) {
-                int inputTokens = task.getMetadata().get("inputTokens").getAsInt();
-                int outputTokens = task.getMetadata().get("outputTokens").getAsInt();
-                
-                JBLabel tokensLabel = new JBLabel(String.format("Tokens: %d in / %d out", inputTokens, outputTokens));
-                tokensLabel.setForeground(JBColor.gray);
-                tokensLabel.setFont(tokensLabel.getFont().deriveFont(Font.PLAIN, 11f));
-                metricsPanel.add(tokensLabel);
-            }
-            
-            if (task.getMetadata().has("cost")) {
-                double cost = task.getMetadata().get("cost").getAsDouble();
-                
-                JBLabel costLabel = new JBLabel(String.format("Cost: $%.4f", cost));
-                costLabel.setForeground(JBColor.gray);
-                costLabel.setFont(costLabel.getFont().deriveFont(Font.PLAIN, 11f));
-                metricsPanel.add(costLabel);
+        // Add metrics like total tokens, cost, etc.
+        // TODO: Calculate these metrics accurately across the whole conversation
+        int totalInputTokens = 0;
+        int totalOutputTokens = 0;
+        double totalCost = 0.0;
+
+        for (Message msg : conversation.getMessages()) {
+            if (msg.getMetadata() != null) {
+                if (msg.getMetadata().has("inputTokens")) {
+                    totalInputTokens += msg.getMetadata().get("inputTokens").getAsInt();
+                }
+                if (msg.getMetadata().has("outputTokens")) {
+                    totalOutputTokens += msg.getMetadata().get("outputTokens").getAsInt();
+                }
+                if (msg.getMetadata().has("cost")) {
+                    totalCost += msg.getMetadata().get("cost").getAsDouble();
+                }
             }
         }
+
+        JBLabel tokensLabel = new JBLabel(String.format("Tokens: %d in / %d out", totalInputTokens, totalOutputTokens));
+        tokensLabel.setForeground(JBColor.gray);
+        tokensLabel.setFont(tokensLabel.getFont().deriveFont(Font.PLAIN, 11f));
+        metricsPanel.add(tokensLabel);
+
+        JBLabel costLabel = new JBLabel(String.format("Cost: $%.4f", totalCost));
+        costLabel.setForeground(JBColor.gray);
+        costLabel.setFont(costLabel.getFont().deriveFont(Font.PLAIN, 11f));
+        metricsPanel.add(costLabel);
         
         // Close button
         JButton closeButton = new JButton(AllIcons.Actions.Close);

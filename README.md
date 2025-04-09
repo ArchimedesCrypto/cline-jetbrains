@@ -137,6 +137,15 @@ For example, when working with a local web server, you can use 'Restore Workspac
 
 <img width="2000" height="0" src="https://github.com/user-attachments/assets/ee14e6f7-20b8-4391-9091-8e8e25561929"><br>
 
+## JetBrains IDE Support (Java Implementation)
+
+A native Java implementation for JetBrains IDEs (IntelliJ, PyCharm, WebStorm, etc.) is under active development in the [`cline-jetbrains-java`](./cline-jetbrains-java/) directory.
+
+*   **User Guide:** [`docs/user-guide.md`](./docs/user-guide.md)
+*   **Developer Guide:** [`docs/developer-guide.md`](./docs/developer-guide.md)
+
+This version aims for full feature and UI parity with the VSCode extension, leveraging native JetBrains UI components and APIs for optimal performance and integration.
+
 ## Contributing
 
 To contribute to the project, start with our [Contributing Guide](CONTRIBUTING.md) to learn the basics. You can also join our [Discord](https://discord.gg/cline) to chat with other contributors in the `#contributors` channel. If you're looking for full-time work, check out our open positions on our [careers page](https://cline.bot/join-us)!

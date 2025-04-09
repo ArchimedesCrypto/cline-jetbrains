@@ -1,209 +1,71 @@
 package com.cline.services.mcp;
 
-import com.google.gson.JsonObject;
+import com.intellij.openapi.components.Service;
 import com.intellij.openapi.diagnostic.Logger;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.CompletableFuture;
-import java.util.stream.Collectors;
 
-/**
- * Hub for managing MCP servers.
- */
-public class McpHub {
+@Service
+public final class McpHub {
     private static final Logger LOG = Logger.getInstance(McpHub.class);
-    
-    private final Map<String, McpServer> servers = new HashMap<>();
-    private final Map<String, McpServerConfig> configs = new HashMap<>();
-    
-    /**
-     * Register a server.
-     *
-     * @param name The server name
-     * @param config The server configuration
-     * @return A CompletableFuture that completes when the server is registered
-     */
-    public CompletableFuture<Void> registerServer(String name, McpServerConfig config) {
-        LOG.info("Registering MCP server: " + name);
-        configs.put(name, config);
-        
-        if (config.isDisabled()) {
-            LOG.info("MCP server is disabled: " + name);
-            return CompletableFuture.completedFuture(null);
-        }
-        
-        // In a real implementation, we would create a real MCP server here
-        // For now, we'll just create a stub implementation
-        McpServer server = new StubMcpServer(name);
-        servers.put(name, server);
-        
-        return server.start();
+
+    // TODO: Implement actual MCP server management
+    private List<String> connectedServers = new ArrayList<>();
+
+    public McpHub() {
+        // Placeholder
+        connectedServers.add("Example Server 1");
+        connectedServers.add("@21st-dev-magic-mcp");
     }
-    
-    /**
-     * Unregister a server.
-     *
-     * @param name The server name
-     * @return A CompletableFuture that completes when the server is unregistered
-     */
-    public CompletableFuture<Void> unregisterServer(String name) {
-        LOG.info("Unregistering MCP server: " + name);
-        configs.remove(name);
-        
-        McpServer server = servers.remove(name);
-        if (server != null) {
-            return server.stop();
-        }
-        
-        return CompletableFuture.completedFuture(null);
+
+    public static McpHub getInstance() {
+        return com.intellij.openapi.application.ApplicationManager.getApplication().getService(McpHub.class);
     }
-    
-    /**
-     * Get a server by name.
-     *
-     * @param name The server name
-     * @return The server, or null if not found
-     */
-    public McpServer getServer(String name) {
-        return servers.get(name);
+
+    public List<String> getConnectedServers() {
+        return new ArrayList<>(connectedServers);
     }
-    
-    /**
-     * Get all servers.
-     *
-     * @return The servers
-     */
-    public List<McpServer> getServers() {
-        return new ArrayList<>(servers.values());
+
+    public List<String> getTools(String serverName) {
+        // Placeholder
+        if ("@21st-dev-magic-mcp".equals(serverName)) {
+            return List.of("21st_magic_component_builder", "logo_search", "21st_magic_component_inspiration");
+            public boolean executeToolOrResource(String name) {
+                try {
+                    // TODO: Implement real MCP tool/resource execution
+                    // For now, simulate success if name contains "Tool"
+                    if (name.contains("Tool")) {
+                        // Simulate API call or plugin integration
+                        Thread.sleep(500); // Simulate delay
+                        return true;
+                    } else {
+                        Thread.sleep(500);
+                        return false;
+                    }
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    return false;
+                }
+            }
+        }
+        return List.of(serverName + " Tool A", serverName + " Tool B");
     }
-    
-    /**
-     * Get all tools from all servers.
-     *
-     * @return The tools
-     */
-    public List<McpTool> getAllTools() {
-        return servers.values().stream()
-                .flatMap(server -> server.getTools().stream())
-                .collect(Collectors.toList());
+
+    public List<String> getResources(String serverName) {
+        // Placeholder
+        return List.of(serverName + " Resource X", serverName + " Resource Y");
     }
-    
-    /**
-     * Get all resources from all servers.
-     *
-     * @return The resources
-     */
-    public List<McpResource> getAllResources() {
-        return servers.values().stream()
-                .flatMap(server -> server.getResources().stream())
-                .collect(Collectors.toList());
+
+    public void connectServer(String config) {
+        // TODO: Implement connection logic
+        LOG.info("Connecting to MCP server (stub): " + config);
+        connectedServers.add("New Server from: " + config.substring(0, 10));
     }
-    
-    /**
-     * Execute a tool.
-     *
-     * @param serverName The server name
-     * @param toolName The tool name
-     * @param args The tool arguments
-     * @return A CompletableFuture containing the tool result
-     */
-    public CompletableFuture<JsonObject> executeTool(String serverName, String toolName, JsonObject args) {
-        McpServer server = getServer(serverName);
-        if (server == null) {
-            return CompletableFuture.failedFuture(new IllegalArgumentException("Server not found: " + serverName));
-        }
-        
-        return server.executeTool(toolName, args);
-    }
-    
-    /**
-     * Access a resource.
-     *
-     * @param serverName The server name
-     * @param uri The resource URI
-     * @return A CompletableFuture containing the resource content
-     */
-    public CompletableFuture<String> accessResource(String serverName, String uri) {
-        McpServer server = getServer(serverName);
-        if (server == null) {
-            return CompletableFuture.failedFuture(new IllegalArgumentException("Server not found: " + serverName));
-        }
-        
-        return server.accessResource(uri);
-    }
-    
-    /**
-     * Stub implementation of McpServer for testing.
-     */
-    private static class StubMcpServer implements McpServer {
-        private final String name;
-        private final List<McpTool> tools = new ArrayList<>();
-        private final List<McpResource> resources = new ArrayList<>();
-        private boolean running = false;
-        
-        public StubMcpServer(String name) {
-            this.name = name;
-            
-            // Add some stub tools and resources
-            tools.add(new McpTool(
-                "example-tool",
-                "An example tool",
-                new JsonObject()
-            ));
-            
-            resources.add(new McpResource(
-                "example://resource",
-                "Example Resource",
-                "text/plain",
-                "An example resource"
-            ));
-        }
-        
-        @Override
-        public String getName() {
-            return name;
-        }
-        
-        @Override
-        public List<McpTool> getTools() {
-            return tools;
-        }
-        
-        @Override
-        public List<McpResource> getResources() {
-            return resources;
-        }
-        
-        @Override
-        public CompletableFuture<JsonObject> executeTool(String toolName, JsonObject args) {
-            JsonObject result = new JsonObject();
-            result.addProperty("result", "Tool executed: " + toolName);
-            return CompletableFuture.completedFuture(result);
-        }
-        
-        @Override
-        public CompletableFuture<String> accessResource(String uri) {
-            return CompletableFuture.completedFuture("Resource content: " + uri);
-        }
-        
-        @Override
-        public boolean isRunning() {
-            return running;
-        }
-        
-        @Override
-        public CompletableFuture<Void> start() {
-            running = true;
-            return CompletableFuture.completedFuture(null);
-        }
-        
-        @Override
-        public CompletableFuture<Void> stop() {
-            running = false;
-            return CompletableFuture.completedFuture(null);
-        }
+
+    public void disconnectServer(String serverName) {
+        // TODO: Implement disconnection logic
+        LOG.info("Disconnecting from MCP server (stub): " + serverName);
+        connectedServers.remove(serverName);
     }
 }
